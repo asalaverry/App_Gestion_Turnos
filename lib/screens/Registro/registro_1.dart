@@ -10,7 +10,6 @@ const colorFondo = Color(0xFFF8FAFC);
 const colorAcento2 = Color(0xFF3A8FA0);
 
 
-
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
   @override

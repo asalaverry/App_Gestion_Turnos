@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen.dart';
-import 'registro_1.dart';
-import 'recuperarContrasena.dart';
+import '../Home/home_screen.dart';
+import '../Registro/registro_1.dart';
+import '../RecuperarContraseña/recuperarContrasena_1.dart'; 
 
-
-// Colores de marca
 const fondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6); 
 const colorSecundario = Color(0xFFEEF5FF); 
@@ -41,21 +39,20 @@ class _LoginScreenState extends State<LoginScreen> {
       data: Theme.of(context).copyWith(
         inputDecorationTheme: InputDecorationTheme(
           labelStyle: const TextStyle(color: Colors.black54),
-          floatingLabelStyle: const TextStyle(color: colorPrimario),               // label azul al enfocar
-          border: const OutlineInputBorder(                                        // borde base
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          floatingLabelStyle: const TextStyle(color: colorPrimario),
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
-          enabledBorder: OutlineInputBorder(                                       // borde normal
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.black26, width: 1.2),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: Colors.black26, width: 1.2),
           ),
-          focusedBorder: const OutlineInputBorder(                                 // borde al foco
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: colorPrimario, width: 1.2),
-        ),
-  // opcional para altura similar a registro:
-  isDense: true,
-  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: colorPrimario, width: 1.2),
+          ),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         ),
       ),
       child: Scaffold(
@@ -95,18 +92,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // Recuperar contraseña
+                  // Recuperar contraseña → ahora va a pantalla 1
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Pasamos el email ingresado al recuperar contraseña
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => RecuperarContrasenaScreen(
-                              initialEmail: _email.text.trim(),
-                            ),
+                            builder: (context) => const RecuperarContrasena1(),
                           ),
                         );
                       },
@@ -172,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                     child: Text(_loading ? 'Ingresando...' : 'Iniciar sesión'),
                   ),
-
                   const SizedBox(height: 12),
 
                   // Botón Registrarse
@@ -183,10 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
                     ),
-                    onPressed: () {   
+                    onPressed: () {
                       Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                        );},
+                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                      );
+                    },
                     child: const Text('Registrarse'),
                   ),
                 ],
