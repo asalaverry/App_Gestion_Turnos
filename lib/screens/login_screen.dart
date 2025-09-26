@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
+import 'registro_1.dart';
+import 'recuperarContrasena.dart';
 
-// Color marca (verde/teal)
+
+// Colores de marca
+const fondo = Color(0xFFF8FAFC);
+const colorPrimario = Color(0xFF86B6F6); 
+const colorSecundario = Color(0xFFEEF5FF); 
+const colorAcento = Color(0xFF2C6E7B);
+const colorFondo = Color(0xFFF8FAFC);
+const colorAcento2 = Color(0xFF3A8FA0);
 const kBrand = Color(0x9C176B87);
 const kFondo = Color(0xFFF8FAFC);
-
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,7 +28,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   bool _loading = false;
 
-
   @override
   void dispose() {
     _email.dispose();
@@ -32,20 +38,28 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      // Estilo local para los TextField de ESTA pantalla
       data: Theme.of(context).copyWith(
         inputDecorationTheme: InputDecorationTheme(
-          floatingLabelStyle: const TextStyle(color: kBrand),
-          focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: kBrand, width: 2),
+          labelStyle: const TextStyle(color: Colors.black54),
+          floatingLabelStyle: const TextStyle(color: colorPrimario),               // label azul al enfocar
+          border: const OutlineInputBorder(                                        // borde base
+          borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: kBrand.withOpacity(0.35)),
+          enabledBorder: OutlineInputBorder(                                       // borde normal
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.black26, width: 1.2),
           ),
+          focusedBorder: const OutlineInputBorder(                                 // borde al foco
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: colorPrimario, width: 1.2),
+        ),
+  // opcional para altura similar a registro:
+  isDense: true,
+  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         ),
       ),
       child: Scaffold(
-        backgroundColor: kFondo, // fondo blanco suave
+        backgroundColor: kFondo,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -57,17 +71,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   Image.asset('assets/logo.png', height: 140, fit: BoxFit.contain),
                   const SizedBox(height: 16),
 
-                  // Campos
+                  // Email
                   TextField(
                     controller: _email,
-                    cursorColor: kBrand,
+                    cursorColor: colorAcento,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(labelText: 'Email'),
                   ),
                   const SizedBox(height: 12),
+
+                  // Contraseña
                   TextField(
                     controller: _password,
-                    cursorColor: kBrand,
+                    cursorColor: colorAcento,
                     obscureText: _obscure,
                     decoration: InputDecoration(
                       labelText: 'Contraseña',
@@ -79,20 +95,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
+                  // Recuperar contraseña
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {/* TODO: reset password */},
+                      onPressed: () {
+                        // Pasamos el email ingresado al recuperar contraseña
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RecuperarContrasenaScreen(
+                              initialEmail: _email.text.trim(),
+                            ),
+                          ),
+                        );
+                      },
                       style: TextButton.styleFrom(foregroundColor: Colors.black54),
                       child: const Text('¿Olvidó su contraseña?'),
                     ),
                   ),
                   const SizedBox(height: 8),
 
-                  // Botón Iniciar sesión (relleno)
+                  // Botón Iniciar sesión
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kBrand,
+                      backgroundColor: colorAcento,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
@@ -148,15 +175,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 12),
 
-                  // Botón Registrarse (outlined)
+                  // Botón Registrarse
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: kBrand,
-                      side: const BorderSide(color: kBrand, width: 2),
+                      foregroundColor: colorAcento,
+                      side: const BorderSide(color: colorAcento, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
                     ),
-                    onPressed: () {/* TODO: ir a registro */},
+                    onPressed: () {   
+                      Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                        );},
                     child: const Text('Registrarse'),
                   ),
                 ],
