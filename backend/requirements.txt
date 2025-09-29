@@ -1,0 +1,10 @@
+
+cryptography==46.0.1
+dotenv==0.9.9
+fastapi==0.117.1
+mysql-connector-python==9.4.0
+PyMySQL==1.1.2
+python-dotenv==1.1.1
+SQLAlchemy==2.0.43
+
+# pydantic==2.11.9  --> Puede venir con la instalacion de fastapi

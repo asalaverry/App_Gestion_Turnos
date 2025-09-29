@@ -1,0 +1,1 @@
+#El __init__.py dentro de app, convierte la carpeta en un paquete Python.
