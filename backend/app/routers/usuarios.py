@@ -1,17 +1,17 @@
 # Definimos los endpoints relacionados a usuarios
-from fastapi import APIRouter, Depends
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import schemas, crud, database
+import schemas, crud
+from database import get_db
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@router.post("/", response_model=schemas.UsuarioResponse)
+def create_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+    # validar si el email ya existe
+    db_usuario = crud.get_usuario_by_email(db, email=usuario.email)
+    if db_usuario:
+        raise HTTPException(status_code=400, detail="Email ya registrado")
 
-@router.post("/")
-def crear_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)): #schemas.UsuarioCreate valida que se cumpla el modelo en schemas.py
-    return crud.create_usuario(db, usuario)
+    return crud.create_usuario(db=db, usuario=usuario)
