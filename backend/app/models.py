@@ -23,6 +23,8 @@ class Usuario(Base):
     plan_obra_social = Column(String(50), nullable=True)
     nro_afiliado = Column(String(50), nullable=True)
     activo = Column(Boolean, default=True)
+    firebase_uid = Column(String(128), unique=True)  # Para vincular con Firebase Auth
+
 
     obra_social = relationship("ObraSocial", back_populates="usuarios")
     turnos = relationship("Turno", back_populates="usuario")

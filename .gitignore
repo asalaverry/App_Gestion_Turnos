@@ -60,3 +60,6 @@ venv/
 
 # --- VSCode ---
 .vscode/
+
+# --- Firebase ---
+backend/app/secret/serviceAccountKey.json
