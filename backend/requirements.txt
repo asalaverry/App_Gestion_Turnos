@@ -6,5 +6,6 @@ mysql-connector-python==9.4.0
 PyMySQL==1.1.2
 python-dotenv==1.1.1
 SQLAlchemy==2.0.43
+uvicorn==0.37.0
 
 # pydantic==2.11.9  --> Puede venir con la instalacion de fastapi
