@@ -10,7 +10,6 @@ def get_current_firebase_user(credentials: HTTPAuthorizationCredentials = Securi
     token = credentials.credentials
     try:
         decoded = firebase_auth.verify_id_token(token)
-        # decoded contiene 'uid', 'email', 'name', etc según proveedor
         return decoded
     except Exception as e:
         raise HTTPException(status_code=401, detail="Token Firebase inválido")

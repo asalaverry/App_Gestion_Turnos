@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from app.routers import usuarios
+from app import firebase
 
 
 app = FastAPI(title="API Turnos Medicos")
