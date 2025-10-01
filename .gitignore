@@ -63,3 +63,12 @@ venv/
 
 # --- Firebase ---
 backend/app/secret/serviceAccountKey.json
+
+
+# Ignorar carpetas de construcción de la aplicación
+frontend/build/
+.gradle
+.idea
+
+# Ignorar archivos generados de logs
+*.log

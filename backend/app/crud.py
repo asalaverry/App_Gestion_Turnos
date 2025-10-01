@@ -27,3 +27,8 @@ def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
 
 def get_usuario_by_email(db: Session, email: str): # Buscar usuario por email. Sirve para evitar duplicados y para login.
     return db.query(models.Usuario).filter(models.Usuario.email == email).first()
+
+def get_usuario_by_id(db: Session, usuario_id: int):
+    return db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+
+# CRUD para usuarios que faltan: Cambiar el estado, borrar (habria?), actualizar datos (QUE datos?)

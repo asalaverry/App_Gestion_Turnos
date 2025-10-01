@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'registro_2.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../config/api.dart';
 
 
 const fondo = Color(0xFFF8FAFC);
@@ -20,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs;
 
+
   // Claves de formularios
   final _formPersonalesKey = GlobalKey<FormState>();
   final _formCoberturaKey = GlobalKey<FormState>();
@@ -29,6 +33,9 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _nombreCtrl = TextEditingController();
   final _apellidoCtrl = TextEditingController();
   DateTime? _fechaNac;
+  String? _dniError;
+  String? _fechaError;
+
 
   // Paso 2
   final _obraCtrl = TextEditingController();
@@ -81,7 +88,12 @@ class _RegisterScreenState extends State<RegisterScreen>
         );
       },
     );
-    if (picked != null) setState(() => _fechaNac = picked);
+    if (picked != null) {
+      setState(() {
+        _fechaNac = picked;
+        _fechaError = null; // Limpiar el error cuando se selecciona una fecha
+      });
+    }
   }
 
   String _fmtFecha(DateTime? d) {
@@ -89,28 +101,85 @@ class _RegisterScreenState extends State<RegisterScreen>
     return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}/${d.year.toString()}';
   }
 
-  void _nextOrSave() {
-    if (_tabs.index == 0) {
-      if (_formPersonalesKey.currentState!.validate()) {
-        if (_fechaNac == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Seleccioná la fecha de nacimiento')),
-          );
-          return;
+  Future<bool> _checkDni() async {
+    final dni = _docCtrl.text.trim();
+    
+    // Limpiar cualquier error previo al inicio
+    setState(() {
+      _dniError = null;
+    });
+
+    try {
+      final res = await http.post(
+        Uri.parse("${ApiConfig.baseUrl}/usuarios/check"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"documento": dni}),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data["exists"] == true) {
+          setState(() {
+            _dniError = "Este DNI ya está registrado";
+          });
+          return false; // DNI ya existe, no puede continuar
+        } else {
+          // El DNI está libre, ya limpiamos _dniError al inicio
+          return true; // DNI libre, puede continuar
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al validar DNI")),
+        );
+        return false;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error de conexión: $e")),
+      );
+      return false;
+    }
+  }
+
+
+  void _nextOrSave() async {
+    if (_tabs.index == 0) {
+      // Verificar fecha de nacimiento
+      if (_fechaNac == null) {
+        setState(() {
+          _fechaError = 'Seleccioná la fecha de nacimiento';
+        });
+      } else {
+        setState(() {
+          _fechaError = null;
+        });
+      }
+      
+      // Verificar el DNI en el backend
+      final dniLibre = await _checkDni();
+      
+      // Esperar a que Flutter procese el setState antes de validar
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      // Validar el formulario
+      if (!_formPersonalesKey.currentState!.validate()) {
+        return; // Si hay errores (campos vacíos, DNI duplicado o fecha faltante), no avanza
+      }
+      
+      // Si todo está OK, avanzar al paso 2
+      if (dniLibre) {
         _tabs.animateTo(1);
       }
     } else {
       if (_formCoberturaKey.currentState!.validate()) {
-          Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
-          builder: (_) => RegisterStep2Screen(
-          nombre: _nombreCtrl.text, // pasar el nombre escrito
+            builder: (_) => RegisterStep2Screen(
+              nombre: _nombreCtrl.text,
             ),
           ),
         );
-
       }
     }
   }
@@ -190,23 +259,29 @@ class _RegisterScreenState extends State<RegisterScreen>
                                     controller: _tabs,
                                     physics: const NeverScrollableScrollPhysics(),
                                     children: [
-                                      _DatosPersonalesForm(
-                                        formKey: _formPersonalesKey,
-                                        docCtrl: _docCtrl,
-                                        nombreCtrl: _nombreCtrl,
-                                        apellidoCtrl: _apellidoCtrl,
-                                        fechaNac: _fechaNac,
-                                        onPickFecha: _pickFecha,
-                                        fmt: _fmtFecha,
-                                        dec: _dec,
+                                      SingleChildScrollView(
+                                        child: _DatosPersonalesForm(
+                                          formKey: _formPersonalesKey,
+                                          docCtrl: _docCtrl,
+                                          nombreCtrl: _nombreCtrl,
+                                          apellidoCtrl: _apellidoCtrl,
+                                          fechaNac: _fechaNac,
+                                          onPickFecha: _pickFecha,
+                                          fmt: _fmtFecha,
+                                          dec: _dec,
+                                          dniError: _dniError,
+                                          fechaError: _fechaError,
+                                        ),
                                       ),
-                                      _CoberturaForm(
-                                        formKey: _formCoberturaKey,
-                                        obraCtrl: _obraCtrl,
-                                        afiliadoCtrl: _afiliadoCtrl,
-                                        planCtrl: _planCtrl,
-                                        telCtrl: _telCtrl,
-                                        dec: _dec,
+                                      SingleChildScrollView(
+                                        child: _CoberturaForm(
+                                          formKey: _formCoberturaKey,
+                                          obraCtrl: _obraCtrl,
+                                          afiliadoCtrl: _afiliadoCtrl,
+                                          planCtrl: _planCtrl,
+                                          telCtrl: _telCtrl,
+                                          dec: _dec,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -358,6 +433,8 @@ class _DatosPersonalesForm extends StatelessWidget {
   final VoidCallback onPickFecha;
   final String Function(DateTime?) fmt;
   final InputDecoration Function(String, {Widget? suffix}) dec;
+  final String? dniError;
+  final String? fechaError;
 
   const _DatosPersonalesForm({
     required this.formKey,
@@ -367,6 +444,8 @@ class _DatosPersonalesForm extends StatelessWidget {
     required this.fechaNac,
     required this.onPickFecha,
     required this.fmt,
+    this.dniError,
+    this.fechaError,
     required this.dec,
   });
 
@@ -380,7 +459,16 @@ class _DatosPersonalesForm extends StatelessWidget {
             controller: docCtrl,
             keyboardType: TextInputType.number,
             decoration: dec('Documento'),
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresá tu DNI' : null,
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) {
+                return 'Ingresá tu DNI';
+              }
+              // Si hay un error de DNI duplicado, mostrarlo
+              if (dniError != null) {
+                return dniError;
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -403,6 +491,12 @@ class _DatosPersonalesForm extends StatelessWidget {
               child: TextFormField(
                 decoration: dec('Fecha de Nacimiento', suffix: const Icon(Icons.calendar_today_outlined)),
                 controller: TextEditingController(text: fmt(fechaNac)),
+                validator: (v) {
+                  if (fechaError != null) {
+                    return fechaError;
+                  }
+                  return null;
+                },
               ),
             ),
           ),

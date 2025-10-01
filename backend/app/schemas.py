@@ -52,6 +52,9 @@ class UsuarioResponse(UsuarioBase):
 
     class Config:
         orm_mode = True
+        
+class UsuarioCheck(BaseModel):
+    documento: str
 
 
 # -------------------

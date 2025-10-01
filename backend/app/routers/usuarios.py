@@ -19,7 +19,7 @@ def create_usuario(
     uid = firebase_user.get("uid")
     email_from_token = firebase_user.get("email")
 
-    # 1) Si ya existe perfil vinculado a ese firebase_uid -> devolvemos (idempotente)
+    # 1) Si ya existe perfil vinculado a ese firebase_uid -> devolvemos (idempotente). Buena practica.
     existing = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
     if existing:
         return existing
@@ -27,7 +27,7 @@ def create_usuario(
     # 2) Evitamos duplicar por email
     if db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first():
         raise HTTPException(status_code=400, detail="Email ya registrado en la base de datos")
-
+    
     # 3) Creamos el usuario (guardamos firebase_uid)
     new_user = models.Usuario(
         firebase_uid = uid,
@@ -45,3 +45,13 @@ def create_usuario(
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@router.post("/check")
+def check_usuario(usuario: schemas.UsuarioCheck, db: Session = Depends(get_db)):
+    # Buscar por documento
+    existe = db.query(models.Usuario).filter(models.Usuario.documento == usuario.documento).first()
+    if existe:
+        return {"exists": True}
+    return {"exists": False}
+
