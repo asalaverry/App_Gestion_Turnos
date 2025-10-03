@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'registro_2.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -352,14 +353,22 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   children: [
                                     Expanded(
                                       child: OutlinedButton(
-                                        onPressed: () => Navigator.pop(context),
+                                        onPressed: () {
+                                          if (_tabs.index == 0) {
+                                            // En el paso 1, cancelar el registro completo
+                                            Navigator.pop(context);
+                                          } else {
+                                            // En el paso 2, volver al paso 1
+                                            _tabs.animateTo(0);
+                                          }
+                                        },
                                         style: OutlinedButton.styleFrom(
                                           side: const BorderSide(color: colorAcento),
                                           shape: const StadiumBorder(),
                                           foregroundColor: colorAcento,
                                           padding: const EdgeInsets.symmetric(vertical: 14),
                                         ),
-                                        child: const Text('Cancelar'),
+                                        child: Text(_tabs.index == 0 ? 'Cancelar' : 'Atrás'),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
@@ -428,40 +437,42 @@ class _TabsFichas extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          /*boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],*/
-          border: Border.all(color: Colors.black.withOpacity(0.06)),
-        ),
-        child: TabBar(
-          controller: controller,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-          indicator: BoxDecoration(
-            color: colorPrimario.withOpacity(.12),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: colorPrimario.withOpacity(.5)),
-          ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: Colors.transparent,
-          labelColor: colorAcento,
-          unselectedLabelColor: Colors.black54,
-          tabs: labels.map((t) {
-            return Tab(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8),
-                child: Text(t, style: textStyle),
+      child: IgnorePointer(
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            /*boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-            );
-          }).toList(),
+            ],*/
+            border: Border.all(color: Colors.black.withOpacity(0.06)),
+          ),
+          child: TabBar(
+            controller: controller,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+            indicator: BoxDecoration(
+              color: colorPrimario.withOpacity(.12),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: colorPrimario.withOpacity(.5)),
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelColor: colorAcento,
+            unselectedLabelColor: Colors.black54,
+            tabs: labels.map((t) {
+              return Tab(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8),
+                  child: Text(t, style: textStyle),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
@@ -503,6 +514,7 @@ class _DatosPersonalesForm extends StatelessWidget {
           TextFormField(
             controller: docCtrl,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: dec('Documento'),
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
@@ -519,6 +531,7 @@ class _DatosPersonalesForm extends StatelessWidget {
           TextFormField(
             controller: nombreCtrl,
             textCapitalization: TextCapitalization.words,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]'))],
             decoration: dec('Nombre'),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresá tu nombre' : null,
           ),
@@ -526,6 +539,7 @@ class _DatosPersonalesForm extends StatelessWidget {
           TextFormField(
             controller: apellidoCtrl,
             textCapitalization: TextCapitalization.words,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]'))],
             decoration: dec('Apellido'),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresá tu apellido' : null,
           ),
@@ -598,7 +612,7 @@ class _CoberturaForm extends StatelessWidget {
                     );
                   }).toList(),
                   onChanged: onObraSocialChanged,
-                  validator: (v) => v == null ? 'Seleccioná tu cobertura' : null,
+                  validator: (v) => v == null ? 'Seleccioná tu obra social' : null,
                 ),
           const SizedBox(height: 12),
           TextFormField(
