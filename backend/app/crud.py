@@ -32,3 +32,9 @@ def get_usuario_by_id(db: Session, usuario_id: int):
     return db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
 
 # CRUD para usuarios que faltan: Cambiar el estado, borrar (habria?), actualizar datos (QUE datos?)
+
+def get_obra_social_by_id(db: Session, obra_social_id: int):
+    return db.query(models.ObraSocial).filter(models.ObraSocial.id == obra_social_id).first()
+
+def get_obras_sociales(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.ObraSocial).offset(skip).limit(limit).all()

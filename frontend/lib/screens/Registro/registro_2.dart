@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'registro_1.dart'; // Para importar UsuarioRegistro
+import '../../config/api.dart';
 
 // Colores compartidos (los mismos de registro_1.dart)
 const fondo = Color(0xFFF8FAFC);
@@ -9,9 +14,9 @@ const colorFondo = Color(0xFFF8FAFC);
 const colorAcento2 = Color(0xFF3A8FA0);
 
 class RegisterStep2Screen extends StatefulWidget {
-  final String nombre; // ← viene desde registro_1.dart
+  final UsuarioRegistro usuarioRegistro; // ← Ahora recibe el objeto completo
 
-  const RegisterStep2Screen({super.key, required this.nombre});
+  const RegisterStep2Screen({super.key, required this.usuarioRegistro});
 
   @override
   State<RegisterStep2Screen> createState() => _RegisterStep2ScreenState();
@@ -25,6 +30,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
 
   bool _obscure = true;
   bool _cuentaCreada = false; // ← controla si ya mostramos el mensaje final
+  bool _isLoading = false; // ← para mostrar loading durante el registro
 
   @override
   void dispose() {
@@ -32,6 +38,86 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
     _repetirEmailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  /// PASO 1: Crear cuenta en Firebase Authentication
+  Future<String?> _crearCuentaFirebase(String email, String password) async {
+    try {
+      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      // Retornar el UID del usuario creado
+      return userCredential.user?.uid;
+    } on FirebaseAuthException catch (e) {
+      String mensaje = 'Error al crear la cuenta';
+      
+      if (e.code == 'weak-password') {
+        mensaje = 'La contraseña es muy débil';
+      } else if (e.code == 'email-already-in-use') {
+        mensaje = 'Este email ya está registrado';
+      } else if (e.code == 'invalid-email') {
+        mensaje = 'El email no es válido';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensaje)),
+      );
+      return null;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error inesperado: $e')),
+      );
+      return null;
+    }
+  }
+
+  /// PASO 2: Guardar usuario en la base de datos
+  Future<bool> _guardarUsuarioEnDB(String uid, String email) async {
+    try {
+      // Obtener el token de Firebase del usuario recién creado
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: Usuario no autenticado')),
+        );
+        return false;
+      }
+
+      final idToken = await user.getIdToken();
+      
+      // Preparar los datos completos del usuario
+      final usuarioCompleto = {
+        ...widget.usuarioRegistro.toJson(), // Datos de registro_1
+        'email': email,                      // Email ingresado
+        // No enviamos el uid, el backend lo obtiene del token
+      };
+
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/usuarios/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken', // Token de Firebase para autenticación
+        },
+        body: jsonEncode(usuarioCompleto),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      } else {
+        final errorBody = response.body;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al guardar: ${response.statusCode} - $errorBody')),
+        );
+        return false;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error de conexión: $e')),
+      );
+      return false;
+    }
   }
 
   // Helpers para bordes de los TextFields
@@ -49,11 +135,52 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
         floatingLabelStyle: const TextStyle(color: colorPrimario),
       );
 
-  void _confirmar() {
-    if (_formKey.currentState!.validate()) {
+  /// FLUJO COMPLETO: Validar → Firebase → Base de Datos → Éxito
+  void _confirmar() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text.trim();
+
+    // PASO 1: Crear cuenta en Firebase
+    final uid = await _crearCuentaFirebase(email, password);
+    
+    if (uid == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return; // Si falló Firebase, no continuar
+    }
+
+    // PASO 2: Guardar en la base de datos
+    final guardadoExitoso = await _guardarUsuarioEnDB(uid, email);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (guardadoExitoso) {
+      // TODO: Si todo salió bien, mostrar mensaje de éxito
       setState(() {
         _cuentaCreada = true;
       });
+    } else {
+      // Si falló guardar en DB, eliminar la cuenta de Firebase
+      try {
+        await FirebaseAuth.instance.currentUser?.delete();
+      } catch (e) {
+        // Silencioso, ya mostramos el error antes
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo completar el registro. Intentá de nuevo.')),
+      );
     }
   }
 
@@ -151,7 +278,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: colorAcento),
                       shape: const StadiumBorder(),
@@ -164,14 +291,23 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _confirmar,
+                    onPressed: _isLoading ? null : _confirmar,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorAcento,
                       foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text("Confirmar"),
+                    child: _isLoading 
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text("Confirmar"),
                   ),
                 ),
               ],
@@ -184,7 +320,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
 
   /// MENSAJE DE BIENVENIDA DESPUÉS DE CREAR LA CUENTA
   Widget _buildMensajeBienvenida() {
-    final nombre = widget.nombre; // viene desde registro_1.dart
+    final nombre = widget.usuarioRegistro.nombre; // Obtener del objeto completo
 
     return Container(
       padding: const EdgeInsets.all(24),

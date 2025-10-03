@@ -55,3 +55,4 @@ def check_usuario(usuario: schemas.UsuarioCheck, db: Session = Depends(get_db)):
         return {"exists": True}
     return {"exists": False}
 
+

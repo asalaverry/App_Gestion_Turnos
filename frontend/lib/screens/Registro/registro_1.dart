@@ -38,7 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen>
 
 
   // Paso 2
-  final _obraCtrl = TextEditingController();
+  int? _obraSocialId; // ID de la obra social seleccionada
+  List<ObraSocial> _obrasSociales = []; // Lista de obras sociales desde la DB
+  bool _loadingObras = false; // Estado de carga
   final _afiliadoCtrl = TextEditingController();
   final _planCtrl = TextEditingController();
   final _telCtrl = TextEditingController();
@@ -46,7 +48,13 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this)..addListener(() => setState(() {}));
+    _tabs = TabController(length: 2, vsync: this)..addListener(() {
+      setState(() {});
+      // Cargar obras sociales cuando se mueve al tab 2
+      if (_tabs.index == 1 && _obrasSociales.isEmpty) {
+        _cargarObrasSociales();
+      }
+    });
   }
 
   @override
@@ -55,7 +63,6 @@ class _RegisterScreenState extends State<RegisterScreen>
     _docCtrl.dispose();
     _nombreCtrl.dispose();
     _apellidoCtrl.dispose();
-    _obraCtrl.dispose();
     _afiliadoCtrl.dispose();
     _planCtrl.dispose();
     _telCtrl.dispose();
@@ -99,6 +106,39 @@ class _RegisterScreenState extends State<RegisterScreen>
   String _fmtFecha(DateTime? d) {
     if (d == null) return '';
     return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}/${d.year.toString()}';
+  }
+
+  /// Cargar obras sociales desde la base de datos
+  Future<void> _cargarObrasSociales() async {
+    setState(() {
+      _loadingObras = true;
+    });
+
+    try {
+      final res = await http.get(
+        Uri.parse("${ApiConfig.baseUrl}/obras-sociales/"),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body);
+        setState(() {
+          _obrasSociales = data.map((json) => ObraSocial.fromJson(json)).toList();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al cargar obras sociales")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error de conexión: $e")),
+      );
+    } finally {
+      setState(() {
+        _loadingObras = false;
+      });
+    }
   }
 
   Future<bool> _checkDni() async {
@@ -172,11 +212,24 @@ class _RegisterScreenState extends State<RegisterScreen>
       }
     } else {
       if (_formCoberturaKey.currentState!.validate()) {
+        final usuarioRegistro = UsuarioRegistro(
+          nombre: _nombreCtrl.text.trim(),
+          apellido: _apellidoCtrl.text.trim(),
+          documento: _docCtrl.text.trim(),
+          fechaNacimiento: _fechaNac != null 
+            ? '${_fechaNac!.year}-${_fechaNac!.month.toString().padLeft(2, '0')}-${_fechaNac!.day.toString().padLeft(2, '0')}'
+            : '',
+          obraSocial: _obraSocialId, // Ahora pasa el ID
+          planObraSocial: _planCtrl.text.trim().isNotEmpty ? _planCtrl.text.trim() : null,
+          numeroAfiliado: _afiliadoCtrl.text.trim().isNotEmpty ? _afiliadoCtrl.text.trim() : null,
+        );
+
+        // Navegar a la siguiente pantalla pasando el objeto usuarioRegistro
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => RegisterStep2Screen(
-              nombre: _nombreCtrl.text,
+          builder: (_) => RegisterStep2Screen(
+            usuarioRegistro: usuarioRegistro,
             ),
           ),
         );
@@ -276,7 +329,14 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       SingleChildScrollView(
                                         child: _CoberturaForm(
                                           formKey: _formCoberturaKey,
-                                          obraCtrl: _obraCtrl,
+                                          obraSocialId: _obraSocialId,
+                                          onObraSocialChanged: (id) {
+                                            setState(() {
+                                              _obraSocialId = id;
+                                            });
+                                          },
+                                          obrasSociales: _obrasSociales,
+                                          loadingObras: _loadingObras,
                                           afiliadoCtrl: _afiliadoCtrl,
                                           planCtrl: _planCtrl,
                                           telCtrl: _telCtrl,
@@ -305,31 +365,16 @@ class _RegisterScreenState extends State<RegisterScreen>
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: ElevatedButton(
-                                      onPressed: () {
-                                      if (_tabs.index == 0) {
-                                            _nextOrSave(); // cambia de Datos Personales → Cobertura
-                                      } else {
-                                      if (_formCoberturaKey.currentState!.validate()) {
-                                        Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => RegisterStep2Screen(
-                                          nombre: _nombreCtrl.text, //  pasa el nombre ingresado
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                backgroundColor: colorAcento,
-                                foregroundColor: Colors.white,
-                                shape: const StadiumBorder(),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: Text(_tabs.index == 0 ? 'Siguiente' : 'Confirmar'),
-                                ),
-                                ),
+                                        onPressed: _nextOrSave,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: colorAcento,
+                                        foregroundColor: Colors.white,
+                                        shape: const StadiumBorder(),
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                        child: Text(_tabs.index == 0 ? 'Siguiente' : 'Confirmar'),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -509,7 +554,10 @@ class _DatosPersonalesForm extends StatelessWidget {
 /// FORM 2 – Cobertura Médica
 class _CoberturaForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController obraCtrl;
+  final int? obraSocialId;
+  final Function(int?) onObraSocialChanged;
+  final List<ObraSocial> obrasSociales;
+  final bool loadingObras;
   final TextEditingController afiliadoCtrl;
   final TextEditingController planCtrl;
   final TextEditingController telCtrl;
@@ -517,7 +565,10 @@ class _CoberturaForm extends StatelessWidget {
 
   const _CoberturaForm({
     required this.formKey,
-    required this.obraCtrl,
+    required this.obraSocialId,
+    required this.onObraSocialChanged,
+    required this.obrasSociales,
+    required this.loadingObras,
     required this.afiliadoCtrl,
     required this.planCtrl,
     required this.telCtrl,
@@ -530,21 +581,25 @@ class _CoberturaForm extends StatelessWidget {
       key: formKey,
       child: Column(
         children: [
-          DropdownButtonFormField<String>(
-            value: obraCtrl.text.isNotEmpty ? obraCtrl.text : null,
-            decoration: dec('Obra Social'),
-            items: const [
-              DropdownMenuItem(value: 'OSDE', child: Text('OSDE')),
-              DropdownMenuItem(value: 'Swiss Medical', child: Text('Swiss Medical')),
-              DropdownMenuItem(value: 'Galeno', child: Text('Galeno')),
-              DropdownMenuItem(value: 'Medicus', child: Text('Medicus')),
-              DropdownMenuItem(value: 'No tengo obra social', child: Text('No tengo obra social')),
-            ],
-            onChanged: (val) {
-              obraCtrl.text = val ?? '';
-            },
-            validator: (v) => (v == null || v.isEmpty) ? 'Seleccioná tu cobertura' : null,
-          ),
+          // Dropdown con obras sociales desde la DB
+          loadingObras
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : DropdownButtonFormField<int>(
+                  value: obraSocialId,
+                  decoration: dec('Obra Social'),
+                  hint: const Text('Seleccioná tu obra social'),
+                  items: obrasSociales.map((obra) {
+                    return DropdownMenuItem<int>(
+                      value: obra.id,
+                      child: Text(obra.nombre),
+                    );
+                  }).toList(),
+                  onChanged: onObraSocialChanged,
+                  validator: (v) => v == null ? 'Seleccioná tu cobertura' : null,
+                ),
           const SizedBox(height: 12),
           TextFormField(
             controller: afiliadoCtrl,
@@ -562,3 +617,51 @@ class _CoberturaForm extends StatelessWidget {
     );
   }
 }
+
+
+// Modelo para Obra Social
+class ObraSocial {
+  final int id;
+  final String nombre;
+
+  ObraSocial({required this.id, required this.nombre});
+
+  factory ObraSocial.fromJson(Map<String, dynamic> json) {
+    return ObraSocial(
+      id: json['id'],
+      nombre: json['nombre'],
+    );
+  }
+}
+
+// Modelo de datos para el registro de un usuario
+class UsuarioRegistro {
+  String nombre;
+  String apellido;
+  String documento;
+  String fechaNacimiento;
+  int? obraSocial; // Ahora es int (ID de la obra social)
+  String? planObraSocial;
+  String? numeroAfiliado;
+
+  UsuarioRegistro({
+    required this.nombre,
+    required this.apellido,
+    required this.documento,
+    required this.fechaNacimiento,
+    this.obraSocial,
+    this.planObraSocial,
+    this.numeroAfiliado,
+  });
+
+  Map<String, dynamic> toJson() => {
+    "nombre": nombre,
+    "apellido": apellido,
+    "documento": documento,
+    "fecha_nacimiento": fechaNacimiento,
+    "id_obra_social": obraSocial,
+    "plan_obra_social": planObraSocial,
+    "nro_afiliado": numeroAfiliado, // Corregido: nro_afiliado con guión bajo
+  };
+}
+
