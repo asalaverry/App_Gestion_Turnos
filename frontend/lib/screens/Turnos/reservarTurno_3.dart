@@ -1,0 +1,115 @@
+import 'package:flutter/material.dart';
+import 'reservarTurno_2.dart';
+import 'reservarTurno_4.dart';
+
+const colorFondo = Color(0xFFF8FAFC);
+const colorPrimario = Color(0xFF86B6F6);
+const colorAcento = Color(0xFF2C6E7B);
+
+class ReservarTurno_3 extends StatefulWidget {
+  const ReservarTurno_3({super.key});
+
+  @override
+  State<ReservarTurno_3> createState() => _ReservarTurno_3State();
+}
+
+class _ReservarTurno_3State extends State<ReservarTurno_3> {
+  int _bottomIndex = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+
+    return Scaffold(
+      backgroundColor: colorFondo,
+      appBar: AppBar(
+        title: const Text('Reservar Turno 3'),
+        backgroundColor: colorPrimario,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ReservarTurno_2()),
+            );
+          },
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Column(
+                children: const [
+                  Icon(Icons.event_available, size: 72, color: colorAcento),
+                  SizedBox(height: 8),
+                  Text(
+                    'Formulario de reserva 3',
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              SizedBox(height: media.size.height * 0.10),
+              // Aquí irían los campos de formulario
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: _bottomNav(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: _fab(),
+    );
+  }
+
+  Widget _bottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: colorPrimario,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+      ),
+      child: SafeArea(
+        top: false,
+        child: NavigationBar(
+          height: 68,
+          backgroundColor: colorPrimario,
+          indicatorColor: Colors.white.withOpacity(0.08),
+          selectedIndex: _bottomIndex,
+          onDestinationSelected: (i) {
+            setState(() => _bottomIndex = i);
+            if (i == 0) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ReservarTurno_2()),
+              );
+            } else {
+              Navigator.of(context).maybePop();
+            }
+          },
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home_outlined, color: Colors.white), label: ''),
+            NavigationDestination(icon: Icon(Icons.arrow_back_ios_new, color: Colors.white), label: ''),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fab() {
+    return FloatingActionButton(
+      backgroundColor: colorAcento,
+      foregroundColor: Colors.white,
+      onPressed: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ReservarTurno_4()),
+        );
+      },
+      child: const Icon(Icons.arrow_forward),
+    );
+  }
+}
