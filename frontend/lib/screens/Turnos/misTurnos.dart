@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'reservarTurno_1.dart';
+import '../Turnos/reservarTurno_1.dart';
+import '../Turnos/gestion_turnos.dart';
 
-// ===== Paleta =====
+// ===== Paleta (reutiliza la tuya) =====
 const fondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6);
 const colorSecundario = Color(0xFFEEF5FF);
@@ -20,6 +21,7 @@ class MisTurnosScreen extends StatefulWidget {
 
 class _MisTurnosScreenState extends State<MisTurnosScreen> {
   int _bottomIndex = 1; 
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,8 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
+
+              // Icono + subtítulo
               Column(
                 children: const [
                   Icon(Icons.calendar_month, size: 72, color: colorAcento),
@@ -56,9 +60,10 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 22),
 
-              // Opción: Reservar turno -> ahora apunta a ReservarTurno_1
+              // Opción: Reservar turno
               _OptionTile(
                 title: 'Reservar Turno',
                 subtitle: 'Reserva un nuevo turno',
@@ -70,7 +75,6 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
                 },
               ),
 
-
               const SizedBox(height: 14),
 
               // Opción: Historial de turnos
@@ -80,7 +84,7 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
                 icon: Icons.history_edu,
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const HistorialTurnosScreen()),
+                    MaterialPageRoute(builder: (_) => const GestionTurnosScreen()),
                   );
                 },
               ),
@@ -90,6 +94,8 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
           ),
         ),
       ),
+
+      // Bottom nav igual al Home
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorPrimario,
@@ -105,8 +111,10 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
             onDestinationSelected: (i) {
               setState(() => _bottomIndex = i);
               if (i == 0) {
+                // Home
                 Navigator.of(context).popUntil((route) => route.isFirst);
               } else {
+                // Atrás
                 Navigator.of(context).maybePop();
               }
             },
@@ -128,8 +136,9 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
         backgroundColor: colorAcento,
         foregroundColor: Colors.white,
         onPressed: () {
+          // Acceso rápido a "Reservar Turno"
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ReservarTurno_1()),
+            MaterialPageRoute(builder: (_) => const ReservarTurnoScreen()),
           );
         },
         child: const Icon(Icons.calendar_month),
@@ -138,7 +147,7 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
   }
 }
 
-// ===== Tile grande =====
+
 class _OptionTile extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -164,6 +173,7 @@ class _OptionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
             children: [
+              // Placeholder de icono tipo “imagen”
               Container(
                 height: 44,
                 width: 44,
@@ -198,7 +208,23 @@ class _OptionTile extends StatelessWidget {
   }
 }
 
-// ===== Placeholders =====
+
+class ReservarTurnoScreen extends StatelessWidget {
+  const ReservarTurnoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reservar Turno'),
+        backgroundColor: colorPrimario,
+        foregroundColor: Colors.white,
+      ),
+      body: const Center(child: Text('WIP: Formulario de reserva')),
+    );
+  }
+}
+
 class HistorialTurnosScreen extends StatelessWidget {
   const HistorialTurnosScreen({super.key});
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../Login/login_screen.dart';
+import '../Turnos/misTurnos.dart';
+import '../Turnos/reservarTurno_1.dart';
+import '../Turnos/reservar_turno.dart';
 
 
 
@@ -45,11 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final media = MediaQuery.of(context);
 
     return Scaffold(
-      backgroundColor: colorFondo,
+      backgroundColor: fondo,
       appBar: AppBar(
         backgroundColor: colorPrimario,
         elevation: 0,
-        foregroundColor: colorFondo,
+        foregroundColor: fondo,
         titleSpacing: 0,
         leading: PopupMenuButton<String>(
           icon: const Icon(Icons.menu),
@@ -201,8 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.event_note,
                     label: 'Mis Turnos',
                     onTap: () {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(const SnackBar(content: Text('Ir a Mis Turnos')));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MisTurnosScreen()),
+                      );
                     },
                   ),
                   _QuickButton(
@@ -258,7 +263,10 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: colorAcento,
         foregroundColor: Colors.white,
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nuevo turno')));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ReservarTurnoWizard()),
+          );
         },
         child: const Icon(Icons.calendar_month),
       ),
@@ -286,7 +294,7 @@ class _AppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: colorFondo,
+      color: fondo,
       elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
