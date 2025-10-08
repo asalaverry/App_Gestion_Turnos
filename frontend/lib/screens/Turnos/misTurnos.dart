@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../Turnos/reservarTurno_1.dart';
 import '../Turnos/gestion_turnos.dart';
+import '../Turnos/reservar_turno.dart';
 
 // ===== Paleta (reutiliza la tuya) =====
 const fondo = Color(0xFFF8FAFC);
@@ -70,7 +70,7 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
                 icon: Icons.event_available,
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ReservarTurno_1()),
+                    MaterialPageRoute(builder: (_) => const ReservarTurnoWizard()),
                   );
                 },
               ),

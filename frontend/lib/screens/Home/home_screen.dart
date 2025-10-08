@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../Login/login_screen.dart';
 import '../Turnos/misTurnos.dart';
-import '../Turnos/reservarTurno_1.dart';
 import '../Turnos/reservar_turno.dart';
 
 
