@@ -7,6 +7,10 @@ Cada una recibe la sesión (db) y un schema (UsuarioCreate, por ejemplo).
 from sqlalchemy.orm import Session
 import models, schemas
 
+from datetime import date
+from models import Turno
+from schemas import TurnoCreate
+
 
 def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
     db_usuario = models.Usuario(
@@ -31,10 +35,40 @@ def get_usuario_by_email(db: Session, email: str): # Buscar usuario por email. S
 def get_usuario_by_id(db: Session, usuario_id: int):
     return db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
 
-# CRUD para usuarios que faltan: Cambiar el estado, borrar (habria?), actualizar datos (QUE datos?)
+def get_usuario_by_uid(db: Session, uid: str):
+    return db.query(models.Usuario).filter(models.Usuario.uid == uid).first()
+
+# CRUD para usuarios que faltan: Cambiar el estado, actualizar datos (QUE datos?)
 
 def get_obra_social_by_id(db: Session, obra_social_id: int):
     return db.query(models.ObraSocial).filter(models.ObraSocial.id == obra_social_id).first()
 
 def get_obras_sociales(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.ObraSocial).offset(skip).limit(limit).all()
+
+# Turnos: 
+def crear_turno(db: Session, turno: TurnoCreate, id_usuario: int):
+    nuevo_turno = Turno(
+        fecha=turno.fecha,
+        horario=turno.horario,
+        id_usuario=id_usuario,
+        id_profesional=turno.id_profesional,
+        estado="activo"
+    )
+    db.add(nuevo_turno)
+    db.commit()
+    db.refresh(nuevo_turno)
+    return nuevo_turno
+
+# Obtener turnos de un usuario
+def obtener_turnos_usuario(db: Session, id_usuario: int):
+    return db.query(Turno).filter(Turno.id_usuario == id_usuario).all()
+
+# Cancelar un turno
+def cancelar_turno(db: Session, id_turno: int):
+    turno = db.query(Turno).filter(Turno.id == id_turno).first()
+    if turno:
+        turno.estado = "cancelado"
+        db.commit()
+        db.refresh(turno)
+    return turno
