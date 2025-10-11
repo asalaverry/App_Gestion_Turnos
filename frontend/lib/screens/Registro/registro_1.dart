@@ -77,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(now.year - 25, now.month, now.day),
+      initialDate: now,
       firstDate: first,
       lastDate: last,
       helpText: 'Fecha de Nacimiento',
@@ -213,6 +213,9 @@ class _RegisterScreenState extends State<RegisterScreen>
       }
     } else {
       if (_formCoberturaKey.currentState!.validate()) {
+        // Si seleccionó "No tengo obra social" (-1), pasar todo como NULL
+        final noTieneObraSocial = _obraSocialId == -1;
+        
         final usuarioRegistro = UsuarioRegistro(
           nombre: _nombreCtrl.text.trim(),
           apellido: _apellidoCtrl.text.trim(),
@@ -220,9 +223,9 @@ class _RegisterScreenState extends State<RegisterScreen>
           fechaNacimiento: _fechaNac != null 
             ? '${_fechaNac!.year}-${_fechaNac!.month.toString().padLeft(2, '0')}-${_fechaNac!.day.toString().padLeft(2, '0')}'
             : '',
-          obraSocial: _obraSocialId, // Ahora pasa el ID
-          planObraSocial: _planCtrl.text.trim().isNotEmpty ? _planCtrl.text.trim() : null,
-          numeroAfiliado: _afiliadoCtrl.text.trim().isNotEmpty ? _afiliadoCtrl.text.trim() : null,
+          obraSocial: noTieneObraSocial ? null : _obraSocialId, // NULL si no tiene obra social
+          planObraSocial: noTieneObraSocial ? null : (_planCtrl.text.trim().isNotEmpty ? _planCtrl.text.trim() : null),
+          numeroAfiliado: noTieneObraSocial ? null : (_afiliadoCtrl.text.trim().isNotEmpty ? _afiliadoCtrl.text.trim() : null),
         );
 
         // Navegar a la siguiente pantalla pasando el objeto usuarioRegistro
@@ -334,6 +337,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           onObraSocialChanged: (id) {
                                             setState(() {
                                               _obraSocialId = id;
+                                              // Si selecciona "No tengo obra social", limpiar los campos
+                                              if (id == -1) {
+                                                _afiliadoCtrl.clear();
+                                                _planCtrl.clear();
+                                              }
                                             });
                                           },
                                           obrasSociales: _obrasSociales,
@@ -591,6 +599,9 @@ class _CoberturaForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Verificar si "No tengo obra social" está seleccionado (valor -1)
+    final noTieneObraSocial = obraSocialId == -1;
+
     return Form(
       key: formKey,
       child: Column(
@@ -605,25 +616,47 @@ class _CoberturaForm extends StatelessWidget {
                   value: obraSocialId,
                   decoration: dec('Obra Social'),
                   hint: const Text('Seleccioná tu obra social'),
-                  items: obrasSociales.map((obra) {
-                    return DropdownMenuItem<int>(
-                      value: obra.id,
-                      child: Text(obra.nombre),
-                    );
-                  }).toList(),
+                  items: [
+                    // Primera opción: "No tengo obra social" con valor -1
+                    const DropdownMenuItem<int>(
+                      value: -1,
+                      child: Text('No tengo obra social'),
+                    ),
+                    // Resto de las obras sociales de la DB
+                    ...obrasSociales.map((obra) {
+                      return DropdownMenuItem<int>(
+                        value: obra.id,
+                        child: Text(obra.nombre),
+                      );
+                    }).toList(),
+                  ],
                   onChanged: onObraSocialChanged,
-                  validator: (v) => v == null ? 'Seleccioná tu obra social' : null,
+                  validator: (v) => v == null ? 'Seleccioná una opción' : null,
                 ),
           const SizedBox(height: 12),
           TextFormField(
             controller: afiliadoCtrl,
-            decoration: dec('Nº de Afiliado'),
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresá tu Nº de afiliado' : null,
+            enabled: !noTieneObraSocial, // Deshabilitar si no tiene obra social
+            decoration: dec('Nº de Afiliado').copyWith(
+              filled: noTieneObraSocial,
+              fillColor: noTieneObraSocial ? const Color.fromARGB(255, 216, 225, 236) : null,
+            ),
+            validator: (v) {
+              // Solo validar si tiene obra social
+              if (!noTieneObraSocial && (v == null || v.trim().isEmpty)) {
+                return 'Ingresá tu Nº de afiliado';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 12),
           TextFormField(
             controller: planCtrl,
-            decoration: dec('Plan'),
+            enabled: !noTieneObraSocial, // Deshabilitar si no tiene obra social
+            decoration: dec('Plan').copyWith(
+              filled: noTieneObraSocial,
+              fillColor: noTieneObraSocial ? const Color.fromARGB(255, 216, 225, 236) : null,
+            ),
           ),
           const SizedBox(height: 12),
         ],
