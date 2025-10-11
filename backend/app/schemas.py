@@ -66,8 +66,9 @@ class EspecialidadBase(BaseModel):
 class EspecialidadCreate(EspecialidadBase):
     pass
 
-class EspecialidadResponse(EspecialidadBase):
+class EspecialidadResponse(BaseModel):
     id: int
+    nombre: str
 
     class Config:
         orm_mode = True
@@ -83,9 +84,10 @@ class ProfesionalBase(BaseModel):
 class ProfesionalCreate(ProfesionalBase):
     pass
 
-class ProfesionalResponse(ProfesionalBase):
+class ProfesionalResponse(BaseModel):
     id: int
-    especialidad: Optional[EspecialidadResponse] = None   # relación
+    nombre: str
+    id_especialidad: int
 
     class Config:
         orm_mode = True

@@ -72,3 +72,15 @@ def cancelar_turno(db: Session, id_turno: int):
         db.commit()
         db.refresh(turno)
     return turno
+
+
+# Obtener todas las especialidades
+def get_especialidades(db: Session):
+    return db.query(models.Especialidad).all()
+
+# Obtener todos los profesionales (opcionalmente filtrados)
+def get_profesionales(db: Session, id_especialidad: int = None):
+    query = db.query(models.Profesional)
+    if id_especialidad:
+        query = query.filter(models.Profesional.id_especialidad == id_especialidad)
+    return query.all()
