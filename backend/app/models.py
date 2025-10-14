@@ -24,6 +24,7 @@ class Usuario(Base):
     nro_afiliado = Column(String(50), nullable=True)
     activo = Column(Boolean, default=True)
     firebase_uid = Column(String(128), unique=True)  # Para vincular con Firebase Auth
+    device_token = Column(String(255), nullable=True)  # el token del dispositivo para notificaciones push
 
 
     obra_social = relationship("ObraSocial", back_populates="usuarios")

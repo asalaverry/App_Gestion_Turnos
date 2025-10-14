@@ -5,11 +5,7 @@ se escriben funciones como create_usuario, get_usuario, listar_usuarios.
 Cada una recibe la sesión (db) y un schema (UsuarioCreate, por ejemplo).
 """
 from sqlalchemy.orm import Session
-import models, schemas
-
-from datetime import date
-from models import Turno
-from schemas import TurnoCreate
+from app import models, schemas
 
 
 def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
@@ -47,8 +43,8 @@ def get_obras_sociales(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.ObraSocial).offset(skip).limit(limit).all()
 
 # Turnos: 
-def crear_turno(db: Session, turno: TurnoCreate, id_usuario: int):
-    nuevo_turno = Turno(
+def crear_turno(db: Session, turno: schemas.TurnoCreate, id_usuario: int):
+    nuevo_turno = models.Turno(
         fecha=turno.fecha,
         horario=turno.horario,
         id_usuario=id_usuario,
@@ -62,11 +58,11 @@ def crear_turno(db: Session, turno: TurnoCreate, id_usuario: int):
 
 # Obtener turnos de un usuario
 def obtener_turnos_usuario(db: Session, id_usuario: int):
-    return db.query(Turno).filter(Turno.id_usuario == id_usuario).all()
+    return db.query(models.Turno).filter(models.Turno.id_usuario == id_usuario).all()
 
 # Cancelar un turno
 def cancelar_turno(db: Session, id_turno: int):
-    turno = db.query(Turno).filter(Turno.id == id_turno).first()
+    turno = db.query(models.Turno).filter(models.Turno.id == id_turno).first()
     if turno:
         turno.estado = "cancelado"
         db.commit()

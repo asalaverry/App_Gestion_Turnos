@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_db
-import crud
-from schemas import ProfesionalResponse
+from app.database import get_db
+from app import crud
+from app.schemas import ProfesionalResponse
 from typing import List
 
 router = APIRouter(prefix="/profesionales", tags=["Profesionales"])

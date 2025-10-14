@@ -55,4 +55,14 @@ def check_usuario(usuario: schemas.UsuarioCheck, db: Session = Depends(get_db)):
         return {"exists": True}
     return {"exists": False}
 
+@router.put("/{uid}/token")
+def actualizar_token(uid: str, token: str, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.uid_firebase == uid).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    usuario.device_token = token
+    db.commit()
+    return {"message": "Token actualizado correctamente"}
+
 

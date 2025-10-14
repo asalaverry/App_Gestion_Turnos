@@ -26,7 +26,7 @@ class ObraSocialResponse(ObraSocialBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # -------------------
@@ -51,7 +51,7 @@ class UsuarioResponse(UsuarioBase):
     obra_social: Optional[ObraSocialResponse] = None   # relación
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         
 class UsuarioCheck(BaseModel):
     documento: str
@@ -71,7 +71,7 @@ class EspecialidadResponse(BaseModel):
     nombre: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # -------------------
@@ -90,7 +90,7 @@ class ProfesionalResponse(BaseModel):
     id_especialidad: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # -------------------
@@ -112,4 +112,4 @@ class TurnoResponse(TurnoBase):
     profesional: Optional[ProfesionalResponse] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
