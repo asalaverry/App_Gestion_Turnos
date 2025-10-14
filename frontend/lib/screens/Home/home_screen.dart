@@ -3,17 +3,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../Login/login_screen.dart';
 import '../Turnos/misTurnos.dart';
 import '../Turnos/reservar_turno.dart';
-
-
+import '../Turnos/gestion_turnos.dart';
+import '../Profesionales/profesionales.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
+import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
+import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
 
 // Paleta
-const fondo = Color(0xFFF8FAFC);
+/*const fondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6);
 const colorSecundario = Color(0xFFEEF5FF);
 const colorAcento = Color(0xFF2C6E7B);
 const colorAcento2 = Color(0xFF3A8FA0);
 const kFondo = Color(0xFFF8FAFC);
-const colorAtencion = Color.fromRGBO(246, 122, 122, 100);
+const colorAtencion = Color.fromRGBO(246, 122, 122, 100);*/
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,17 +50,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final media = MediaQuery.of(context);
 
     return Scaffold(
-      backgroundColor: fondo,
-      appBar: AppBar(
-        backgroundColor: colorPrimario,
+      backgroundColor: pal.fondo,
+      /*appBar: AppBar(
+        backgroundColor: pal.colorPrimario,
         elevation: 0,
-        foregroundColor: fondo,
+        foregroundColor: pal.fondo,
         titleSpacing: 0,
         leading: PopupMenuButton<String>(
           icon: const Icon(Icons.menu),
           position: PopupMenuPosition.under,           // aparece debajo del botón
-          offset: const Offset(0, 8),                  // separaxion
-          color: colorPrimario,                        // fondo azul como la barra
+          offset: const Offset(0, 8),                  // separacion
+          color: pal.colorPrimario,                        // fondo azul como la barra
           elevation: 6,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           onSelected: (value) async {
@@ -115,7 +118,97 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 8),
         ],
+      ),*/
+      appBar: CustomTopBar.home(
+        title: '',
+        notifCount: _notifCount,
+        onNotificationsPressed: () => setState(() => _notifCount = 0),
+
+        onMenuSelected: (value) async {
+          switch (value) {
+            case 'mis_turnos':
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MisTurnosScreen()),
+            );
+            break;
+
+          case 'historial':
+          
+          if (!context.mounted) return;
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GestionTurnosScreen()),
+            );
+          break;
+
+        case 'especialidades':
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ir a Especialidades')),
+          );
+          break;
+
+        case 'profesionales':
+          if (!context.mounted) return;
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfesionaleScreen()),
+            );
+        break;
+
+        case 'perfil':
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ir a Mi perfil')),
+          );
+        break;
+
+        case 'logout':
+          // Cerrar sesión  y llevar a Login
+          await FirebaseAuth.instance.signOut();
+          if (!context.mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        break;
+      }
+    },
+
+    menuBuilder: (context) => const [
+      PopupMenuItem(
+        value: 'mis_turnos',
+        child: Text('Mis turnos', style: TextStyle(color: Colors.white)),
       ),
+      PopupMenuItem(
+        value: 'historial',
+        child: Text('Historial turnos', style: TextStyle(color: Colors.white)),
+      ),
+      PopupMenuItem(
+        value: 'especialidades',
+        child: Text('Especialidades', style: TextStyle(color: Colors.white)),
+      ),
+      PopupMenuItem(
+        value: 'profesionales',
+        child: Text('Profesionales', style: TextStyle(color: Colors.white)),
+      ),
+      PopupMenuItem(
+        value: 'perfil',
+        child: Text('Mi perfil', style: TextStyle(color: Colors.white)),
+      ),
+      PopupMenuDivider(),
+      PopupMenuItem(
+        value: 'logout',
+        child: Text(
+          'Cerrar sesión',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+      ),
+    ),
+  ],
+),
+
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -133,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                 decoration: BoxDecoration(
-                  color: colorSecundario,
+                  color: pal.colorSecundario,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -168,8 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             shape: BoxShape.circle,
                             
                             color: _currentPage == i
-                                ? colorAcento2.withValues(alpha: 0.9)
-                                : colorPrimario.withValues(alpha: 0.6),
+                                ? pal.colorAcento2.withValues(alpha: 0.9)
+                                : pal.colorPrimario.withValues(alpha: 0.6),
                           ),
                         ),
                       ),
@@ -222,8 +315,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.groups,
                     label: 'Profesionales',
                     onTap: () {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(const SnackBar(content: Text('Ir a Profesionales')));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProfesionaleScreen()),
+                      );
                     },
                   ),
                 ],
@@ -236,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // Bottom nav
-      bottomNavigationBar: Container(
+      /*bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: colorPrimario,
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)],
@@ -255,11 +350,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),*/
+      bottomNavigationBar: CustomBottomNav(
+      currentIndex: _bottomIndex,
+      onDestinationSelected: (i) => setState(() => _bottomIndex = i),
       ),
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: colorAcento,
+        backgroundColor: pal.colorAcento,
         foregroundColor: Colors.white,
         onPressed: () {
           Navigator.push(
@@ -293,7 +392,7 @@ class _AppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: fondo,
+      color: pal.fondo,
       elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -327,7 +426,7 @@ class _QuickButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: colorSecundario,
+      color: pal.colorSecundario,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -337,7 +436,7 @@ class _QuickButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 36, color: colorAcento),
+              Icon(icon, size: 36, color: pal.colorAcento),
               const SizedBox(height: 10),
               Text(label, textAlign: TextAlign.center,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -358,7 +457,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: colorAtencion,
+        color: pal.colorAtencion,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

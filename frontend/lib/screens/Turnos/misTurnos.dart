@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import '../Turnos/gestion_turnos.dart';
 import '../Turnos/reservar_turno.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
+import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
+import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
 
-// ===== Paleta (reutiliza la tuya) =====
+
+/*
 const fondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6);
 const colorSecundario = Color(0xFFEEF5FF);
 const colorAcento = Color(0xFF2C6E7B);
 const colorAcento2 = Color(0xFF3A8FA0);
 const colorFondo = Color(0xFFF8FAFC);
-const colorAtencion = Color.fromRGBO(246, 122, 122, 100);
+const colorAtencion = Color.fromRGBO(246, 122, 122, 100);*/
 
 // ===== Pantalla Mis Turnos =====
 class MisTurnosScreen extends StatefulWidget {
@@ -28,9 +32,9 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
     final media = MediaQuery.of(context);
 
     return Scaffold(
-      backgroundColor: colorFondo,
-      appBar: AppBar(
-        backgroundColor: colorPrimario,
+      backgroundColor: pal.fondo,
+      /*appBar: AppBar(
+        backgroundColor: pal.colorPrimario,
         elevation: 0,
         foregroundColor: Colors.white,
         titleSpacing: 0,
@@ -39,7 +43,11 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: const Text('Mis Turnos'),
+      ),*/
+      appBar: CustomTopBar.back(
+        title: 'Mis Turnos',
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -51,7 +59,7 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
               // Icono + subtítulo
               Column(
                 children: const [
-                  Icon(Icons.calendar_month, size: 72, color: colorAcento),
+                  Icon(Icons.calendar_month, size: 72, color: pal.colorAcento),
                   SizedBox(height: 8),
                   Text(
                     'Seleccionar una opción',
@@ -96,16 +104,16 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
       ),
 
       // Bottom nav igual al Home
-      bottomNavigationBar: Container(
+      /*bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: colorPrimario,
+          color: pal.colorPrimario,
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
         ),
         child: SafeArea(
           top: false,
           child: NavigationBar(
             height: 68,
-            backgroundColor: colorPrimario,
+            backgroundColor: pal.colorPrimario,
             indicatorColor: Colors.white.withOpacity(0.08),
             selectedIndex: _bottomIndex,
             onDestinationSelected: (i) {
@@ -130,15 +138,29 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
             ],
           ),
         ),
-      ),
+      ),*/
+    bottomNavigationBar: CustomBottomNav(
+      currentIndex: _bottomIndex,
+      onDestinationSelected: (i) {
+      setState(() => _bottomIndex = i);
+      if (i == 0) {
+        // Ir a Home (raíz del stack)
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } else {
+        // Atrás
+        Navigator.of(context).maybePop();
+        }
+      },
+    ),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: colorAcento,
+        backgroundColor: pal.colorAcento,
         foregroundColor: Colors.white,
         onPressed: () {
           // Acceso rápido a "Reservar Turno"
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ReservarTurnoScreen()),
+            MaterialPageRoute(builder: (_) => const ReservarTurnoWizard()),
           );
         },
         child: const Icon(Icons.calendar_month),
@@ -164,7 +186,7 @@ class _OptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: colorSecundario,
+      color: pal.colorSecundario,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -181,7 +203,7 @@ class _OptionTile extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: colorAcento),
+                child: Icon(icon, color: pal.colorAcento),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -217,7 +239,7 @@ class ReservarTurnoScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reservar Turno'),
-        backgroundColor: colorPrimario,
+        backgroundColor: pal.colorPrimario,
         foregroundColor: Colors.white,
       ),
       body: const Center(child: Text('WIP: Formulario de reserva')),
@@ -233,7 +255,7 @@ class HistorialTurnosScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial de Turnos'),
-        backgroundColor: colorPrimario,
+        backgroundColor: pal.colorPrimario,
         foregroundColor: Colors.white,
       ),
       body: const Center(child: Text('WIP: Listado de turnos previos')),

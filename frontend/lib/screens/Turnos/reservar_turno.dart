@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'misTurnos.dart';
+import '../Home/home_screen.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
+import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 
-// ------ Paleta (misma que usás) ------
+/*
 const colorFondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6);
-const colorAcento = Color(0xFF2C6E7B);
+const colorAcento = Color(0xFF2C6E7B);*/
 
 // ------ Mocks demo ------
 const _especialidades = <String>[
@@ -25,7 +28,7 @@ InputDecoration _inputDecoration({required String hint, required IconData prefix
     hintText: hint,
     filled: true,
     fillColor: Colors.white,
-    prefixIcon: Icon(prefix, color: colorAcento),
+    prefixIcon: Icon(prefix, color: pal.colorAcento),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
@@ -33,7 +36,7 @@ InputDecoration _inputDecoration({required String hint, required IconData prefix
     ),
     focusedBorder: const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),
-      borderSide: BorderSide(color: colorAcento, width: 1.4),
+      borderSide: BorderSide(color: pal.colorAcento, width: 1.4),
     ),
   );
 }
@@ -73,10 +76,10 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
     final media = MediaQuery.of(context);
 
     return Scaffold(
-      backgroundColor: colorFondo,
+      backgroundColor: pal.fondo,
       appBar: AppBar(
         title: const Text('Reservar turno'),
-        backgroundColor: colorPrimario,
+        backgroundColor: pal.colorPrimario,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
@@ -158,7 +161,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                       builder: (ctx, child) => Theme(
                         data: Theme.of(ctx).copyWith(
                           colorScheme: const ColorScheme.light(
-                            primary: colorAcento, onPrimary: Colors.white, onSurface: Colors.black87),
+                            primary: pal.colorAcento, onPrimary: Colors.white, onSurface: Colors.black87),
                         ),
                         child: child!,
                       ),
@@ -183,7 +186,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Recordarme 24 hs antes'),
                   value: _recordatorio24h,
-                  activeColor: colorAcento,
+                  activeColor: pal.colorAcento,
                   onChanged: (v) => setState(() => _recordatorio24h = v),
                 ),
                 SizedBox(height: media.size.height * 0.12),
@@ -210,7 +213,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        const Icon(Icons.event_available, size: 48, color: colorAcento),
+                        const Icon(Icons.event_available, size: 48, color: pal.colorAcento),
                         const SizedBox(height: 12),
                         const Text('Resumen turno',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
@@ -249,7 +252,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                     padding: EdgeInsets.all(22),
                     child: Column(
                       children: [
-                        Icon(Icons.check_circle_outline, color: colorAcento, size: 48),
+                        Icon(Icons.check_circle_outline, color: pal.colorAcento, size: 48),
                         SizedBox(height: 12),
                         Text('Turno reservado exitosamente',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
@@ -261,7 +264,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                 Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorAcento,
+                      backgroundColor: pal.colorAcento,
                       foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
@@ -283,16 +286,16 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
       ),
 
       // Barra inferior 
-      bottomNavigationBar: Container(
+      /*bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: colorPrimario,
+          color: pal.colorPrimario,
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
         ),
         child: SafeArea(
           top: false,
           child: NavigationBar(
             height: 68,
-            backgroundColor: colorPrimario,
+            backgroundColor: pal.colorPrimario,
             indicatorColor: Colors.white.withOpacity(0.08),
             selectedIndex: _bottomIndex,
             onDestinationSelected: (i) {
@@ -313,7 +316,24 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
             ],
           ),
         ),
+      ),*/
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: _bottomIndex,
+        onDestinationSelected: (i) {
+        setState(() => _bottomIndex = i);
+        if (i == 0) {
+        // Ir a Mis Turnos como “Home” de este flujo
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (r) => r.isFirst,
+        );
+        } else {
+          Navigator.of(context).maybePop();
+        }
+        },
       ),
+
     );
   }
 
@@ -334,7 +354,7 @@ class _HeaderIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.only(bottom: 10),
-      child: Icon(Icons.event_available, size: 72, color: colorAcento),
+      child: Icon(Icons.event_available, size: 72, color: pal.colorAcento),
     );
   }
 }
@@ -373,8 +393,8 @@ class _PillButtons extends StatelessWidget {
           onPressed: anterior,
           style: OutlinedButton.styleFrom(
             shape: const StadiumBorder(),
-            side: BorderSide(color: colorAcento.withOpacity(.7)),
-            foregroundColor: colorAcento,
+            side: BorderSide(color: pal.colorAcento.withOpacity(.7)),
+            foregroundColor: pal.colorAcento,
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
             minimumSize: const Size(140, 44),
           ),
@@ -384,7 +404,7 @@ class _PillButtons extends StatelessWidget {
           onPressed: siguienteEnabled ? onSiguiente : null,
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
-            backgroundColor: colorAcento,
+            backgroundColor: pal.colorAcento,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
             minimumSize: const Size(140, 44),

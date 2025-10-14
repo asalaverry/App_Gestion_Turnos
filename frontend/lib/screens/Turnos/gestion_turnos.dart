@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../Turnos/reservar_turno.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
+import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 
-
+/*
 const fondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6);
 const colorSecundario = Color(0xFFEEF5FF);
@@ -9,7 +12,7 @@ const colorAcento2 = Color(0xFF3A8FA0);
 const colorFondo = Color(0xFFF8FAFC);
 const colorAtencion = Color.fromRGBO(246, 122, 122, 100);
 const colorIndicador = Color.fromRGBO(20,107,223,100);
-const colorFuente = const Color.fromARGB(179, 96, 96, 96);
+const colorFuente =  Color.fromARGB(179, 96, 96, 96);*/
 
 
 class Turno {
@@ -81,11 +84,11 @@ int _bottomIndex = 1; // marcar Atrás como activo en esta pantalla
 @override
 Widget build(BuildContext context) {
   return Scaffold(
-    backgroundColor: colorFondo,
+    backgroundColor: pal.fondo,
 
     // AppBar con tabs
     appBar: AppBar(
-      backgroundColor: colorPrimario,
+      backgroundColor: pal.colorPrimario,
       elevation: 0,
       foregroundColor: Colors.white,
       titleSpacing: 0,
@@ -97,12 +100,12 @@ Widget build(BuildContext context) {
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(48),
         child: Container(
-          color: colorSecundario,
+          color: pal.colorSecundario,
           child: TabBar(
             controller: _tabCtrl,
-            indicatorColor: colorIndicador,
-            labelColor: colorIndicador,
-            unselectedLabelColor: colorFuente,
+            indicatorColor: pal.colorIndicador,
+            labelColor: pal.colorIndicador,
+            unselectedLabelColor: pal.colorFuente,
             tabs: const [
               Tab(text: 'Próximos'),
               Tab(text: 'Historial'),
@@ -111,6 +114,7 @@ Widget build(BuildContext context) {
         ),
       ),
     ),
+    
 
     // Contenido de cada pestaña
     body: TabBarView(
@@ -128,16 +132,16 @@ Widget build(BuildContext context) {
     ),
 
     // Bottom nav igual al Home
-    bottomNavigationBar: Container(
+    /*bottomNavigationBar: Container(
       decoration: BoxDecoration(
-        color: colorPrimario,
+        color: pal.colorPrimario,
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
       ),
       child: SafeArea(
         top: false,
         child: NavigationBar(
           height: 68,
-          backgroundColor: colorPrimario,
+          backgroundColor: pal.colorPrimario,
           indicatorColor: Colors.white.withOpacity(0.08),
           selectedIndex: _bottomIndex,
           onDestinationSelected: (i) {
@@ -160,7 +164,32 @@ Widget build(BuildContext context) {
           ],
         ),
       ),
+    ),*/
+    bottomNavigationBar: CustomBottomNav(
+    currentIndex: _bottomIndex,
+    onDestinationSelected: (i) {
+    setState(() => _bottomIndex = i);
+    if (i == 0) {
+      // Ir a Home (raíz de la app)
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else {
+      // Atrás
+      Navigator.of(context).maybePop();
+        }
+      },
     ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: pal.colorAcento,
+        foregroundColor: Colors.white,
+        onPressed: () {
+          // Acceso rápido a "Reservar Turno"
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ReservarTurnoWizard()),
+          );
+        },
+        child: const Icon(Icons.calendar_month),
+      ),
   );
 }
 
@@ -171,7 +200,7 @@ Widget build(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: colorSecundario,
+      backgroundColor: pal.colorSecundario,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -184,7 +213,7 @@ Widget build(BuildContext context) {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Icon(Icons.calendar_today, color: colorAcento, size: 36),
+                Icon(Icons.calendar_today, color: pal.colorAcento, size: 36),
               ],
             ),
             const SizedBox(height: 10),
@@ -200,7 +229,7 @@ Widget build(BuildContext context) {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colorAtencion, // botón rojo suave
+                  backgroundColor: pal.colorAtencion, // botón rojo suave
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -222,14 +251,14 @@ Widget build(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: colorSecundario,
+        backgroundColor: pal.colorSecundario,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
         contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
         actionsPadding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
         title: Row(
           children: const [
-            Icon(Icons.error_outline, color: colorAtencion),
+            Icon(Icons.error_outline, color: pal.colorAtencion),
             SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -250,7 +279,7 @@ Widget build(BuildContext context) {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: colorAcento,
+              backgroundColor: pal.colorAcento,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -283,12 +312,12 @@ Widget build(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: colorSecundario,
+        backgroundColor: pal.colorSecundario,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Icon(Icons.check_circle_outline, color: colorAcento),
+            Icon(Icons.check_circle_outline, color: pal.colorAcento),
             SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -303,7 +332,7 @@ Widget build(BuildContext context) {
           Center(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: colorAcento,
+                backgroundColor: pal.colorAcento,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
@@ -321,7 +350,7 @@ Widget build(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: colorSecundario,
+      backgroundColor: pal.colorSecundario,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -330,7 +359,7 @@ Widget build(BuildContext context) {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_today, color: colorAcento, size: 36),
+            const Icon(Icons.calendar_today, color: pal.colorAcento, size: 36),
             const SizedBox(height: 10),
             const Text('Datos del turno',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
@@ -372,7 +401,7 @@ class _ListaTurnos extends StatelessWidget {
       itemBuilder: (_, i) {
         final t = items[i];
         return Material(
-          color: colorSecundario,
+          color: pal.colorSecundario,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
@@ -388,7 +417,7 @@ class _ListaTurnos extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.event_available, color: colorAcento),
+                    child: const Icon(Icons.event_available, color: pal.colorAcento),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
