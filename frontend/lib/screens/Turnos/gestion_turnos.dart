@@ -1,34 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../Turnos/reservar_turno.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
-
-/*
-const fondo = Color(0xFFF8FAFC);
-const colorPrimario = Color(0xFF86B6F6);
-const colorSecundario = Color(0xFFEEF5FF);
-const colorAcento = Color(0xFF2C6E7B);
-const colorAcento2 = Color(0xFF3A8FA0);
-const colorFondo = Color(0xFFF8FAFC);
-const colorAtencion = Color.fromRGBO(246, 122, 122, 100);
-const colorIndicador = Color.fromRGBO(20,107,223,100);
-const colorFuente =  Color.fromARGB(179, 96, 96, 96);*/
-
+import '../../config/api.dart';
 
 class Turno {
+  final int id;
   final String especialidad;
   final String profesional;
   final String fecha;  
   final String horario; 
-  final String? observaciones; // se usa en historial
+  final String estado;
+  final String? observaciones;
+  final DateTime fechaHora; // Para ordenamiento
 
   Turno({
+    required this.id,
     required this.especialidad,
     required this.profesional,
     required this.fecha,
     required this.horario,
+    required this.estado,
+    required this.fechaHora,
     this.observaciones,
   });
+
+  factory Turno.fromJson(Map<String, dynamic> json) {
+    // Parsear fecha y horario originales para ordenamiento
+    final fechaOriginal = json['fecha']; // YYYY-MM-DD
+    final horarioOriginal = json['horario']; // HH:MM:SS
+    
+    DateTime fechaHoraCompleta = DateTime.parse('$fechaOriginal $horarioOriginal');
+
+    // Formatear fecha y horario:
+
+    String fechaFormateada = fechaOriginal;
+    if (fechaFormateada.contains('-')) {
+      final partes = fechaFormateada.split('-');
+      if (partes.length == 3) {
+        fechaFormateada = '${partes[2]}/${partes[1]}/${partes[0]}';
+      }
+    }
+
+    String horarioFormateado = horarioOriginal;
+    if (horarioFormateado.length > 5) {
+      horarioFormateado = horarioFormateado.substring(0, 5);
+    }
+
+    return Turno(
+      id: json['id'],
+      especialidad: json['profesional']?['especialidad']?['nombre'] ?? 'Sin especialidad',
+      profesional: json['profesional']?['nombre'] ?? 'Sin asignar',
+      fecha: fechaFormateada,
+      horario: horarioFormateado,
+      estado: json['estado'],
+      fechaHora: fechaHoraCompleta,
+      observaciones: json['observaciones'],
+    );
+  }
 }
 
 
@@ -43,34 +75,119 @@ class _GestionTurnosScreen extends State< GestionTurnosScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
 
-  // Mocks: reemplazar por datos del backend luego
-  final List<Turno> _proximos = [
-    Turno(especialidad: 'Clínica Médica', profesional: 'Dr. Pérez', fecha: '15/10/2025', horario: '09:00'),
-    Turno(especialidad: 'Cardiología', profesional: 'Dra. López', fecha: '20/10/2025', horario: '10:30'),
-    Turno(especialidad: 'Dermatología', profesional: 'Dra. Ruiz', fecha: '28/10/2025', horario: '15:15'),
-  ];
-
-  final List<Turno> _historial = [
-    Turno(
-      especialidad: 'Oftalmología',
-      profesional: 'Dr. Gómez',
-      fecha: '04/09/2025',
-      horario: '11:00',
-      observaciones: 'Control anual. Se indicó nuevo aumento.',
-    ),
-    Turno(
-      especialidad: 'Odontología',
-      profesional: 'Dra. Navas',
-      fecha: '22/08/2025',
-      horario: '14:00',
-      observaciones: 'Limpieza y control. Sin novedades.',
-    ),
-  ];
+  List<Turno> _proximos = [];
+  List<Turno> _pasados = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
+    _cargarTurnos();
+  }
+
+  /// Cargar turnos desde la base de datos
+  Future<void> _cargarTurnos() async {
+    setState(() => _loading = true);
+
+    try {
+      // Obtener usuario actual de Firebase
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No hay sesión activa')),
+          );
+        }
+        setState(() => _loading = false);
+        return;
+      }
+
+      final idToken = await user.getIdToken();
+
+      // Consultar turnos del usuario
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/turnos/usuario'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<Turno> todosTurnos = data.map((json) => Turno.fromJson(json)).toList();
+
+        // Separar en próximos (activo) y pasados (pasado)
+        final proximos = todosTurnos.where((t) => t.estado == 'activo').toList();
+        final pasados = todosTurnos.where((t) => t.estado == 'pasado').toList();
+
+        proximos.sort((a, b) => a.fechaHora.compareTo(b.fechaHora));
+        pasados.sort((a, b) => b.fechaHora.compareTo(a.fechaHora));
+
+        setState(() {
+          _proximos = proximos;
+          _pasados = pasados;
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al cargar turnos: ${response.statusCode}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de conexión: $e')),
+        );
+      }
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  /// Cancelar turno en el backend
+  Future<bool> _cancelarTurno(int idTurno) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No hay sesión activa')),
+          );
+        }
+        return false;
+      }
+
+      final idToken = await user.getIdToken();
+
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/turnos/$idTurno/cancelar'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al cancelar turno: ${response.statusCode}')),
+          );
+        }
+        return false;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de conexión: $e')),
+        );
+      }
+      return false;
+    }
   }
 
   @override
@@ -108,7 +225,7 @@ Widget build(BuildContext context) {
             unselectedLabelColor: pal.colorFuente,
             tabs: const [
               Tab(text: 'Próximos'),
-              Tab(text: 'Historial'),
+              Tab(text: 'Pasados'),
             ],
           ),
         ),
@@ -117,19 +234,27 @@ Widget build(BuildContext context) {
     
 
     // Contenido de cada pestaña
-    body: TabBarView(
-      controller: _tabCtrl,
-      children: [
-        _ListaTurnos(
-          items: _proximos,
-          onTapItem: (t) => _mostrarDetalleProximo(context, t),
-        ),
-        _ListaTurnos(
-          items: _historial,
-          onTapItem: (t) => _mostrarDetalleHistorial(context, t),
-        ),
-      ],
-    ),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : TabBarView(
+            controller: _tabCtrl,
+            children: [
+              RefreshIndicator(
+                onRefresh: _cargarTurnos,
+                child: _ListaTurnos(
+                  items: _proximos,
+                  onTapItem: (t) => _mostrarDetalleProximo(context, t),
+                ),
+              ),
+              RefreshIndicator(
+                onRefresh: _cargarTurnos,
+                child: _ListaTurnos(
+                  items: _pasados,
+                  onTapItem: (t) => _mostrarDetallePasado(context, t),
+                ),
+              ),
+            ],
+          ),
 
     // Bottom nav igual al Home
     /*bottomNavigationBar: Container(
@@ -283,23 +408,29 @@ Widget build(BuildContext context) {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
-              Navigator.of(context).pop(); // cierra confirmación
-              // Lógica local: quitar de Próximos y pasar a Historial 
-              setState(() {
-                _proximos.remove(t);
-                _historial.insert(
-                  0,
-                  Turno(
-                    especialidad: t.especialidad,
-                    profesional: t.profesional,
-                    fecha: t.fecha,
-                    horario: t.horario,
-                    observaciones: 'Turno cancelado por el usuario.',
-                  ),
-                );
-              });
-              _exitoCancelacion(context);
+            onPressed: () async {
+              Navigator.of(context).pop(); 
+              
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+
+              // Cancelar turno en el backend
+              final exitoso = await _cancelarTurno(t.id);
+              
+              if (mounted) Navigator.of(context).pop();
+
+              if (exitoso) {
+                // Recargar turnos
+                await _cargarTurnos();
+                if (mounted) {
+                  _exitoCancelacion(context);
+                }
+              }
             },
             child: const Text('Aceptar'),
           ),
@@ -345,8 +476,8 @@ Widget build(BuildContext context) {
     );
   }
 
-  // ---------- POPUP Historial ----------
-  void _mostrarDetalleHistorial(BuildContext context, Turno t) {
+  // ---------- POPUP Pasados ----------
+  void _mostrarDetallePasado(BuildContext context, Turno t) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

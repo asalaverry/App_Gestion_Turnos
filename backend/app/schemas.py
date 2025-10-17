@@ -13,9 +13,8 @@ from typing import Optional, List, Literal
 
 
 
-# -------------------
+
 # OBRAS SOCIALES
-# -------------------
 class ObraSocialBase(BaseModel):
     nombre: str
 
@@ -29,9 +28,8 @@ class ObraSocialResponse(ObraSocialBase):
         from_attributes = True
 
 
-# -------------------
+
 # USUARIOS
-# -------------------
 class UsuarioBase(BaseModel):
     email: EmailStr
     nombre: str
@@ -57,9 +55,7 @@ class UsuarioCheck(BaseModel):
     documento: str
 
 
-# -------------------
 # ESPECIALIDADES
-# -------------------
 class EspecialidadBase(BaseModel):
     nombre: str
 
@@ -74,9 +70,7 @@ class EspecialidadResponse(BaseModel):
         from_attributes = True
 
 
-# -------------------
 # PROFESIONALES
-# -------------------
 class ProfesionalBase(BaseModel):
     nombre: str
     id_especialidad: int
@@ -88,28 +82,29 @@ class ProfesionalResponse(BaseModel):
     id: int
     nombre: str
     id_especialidad: int
+    especialidad: Optional[EspecialidadResponse] = None  # Incluir datos de la especialidad
 
     class Config:
         from_attributes = True
 
 
-# -------------------
 # TURNOS
-# -------------------
-
 class TurnoBase(BaseModel):
     fecha: date
     horario: time
-    estado: Literal["activo", "pasado", "cancelado"]
 
 
 class TurnoCreate(TurnoBase):
-    pass 
+    id_profesional: int  # Siempre requerido (frontend asigna uno aleatorio si usuario elige "Cualquiera")
+
 
 class TurnoResponse(TurnoBase):
     id: int
+    estado: Literal["activo", "pasado", "cancelado"]
     usuario: Optional[UsuarioResponse] = None
     profesional: Optional[ProfesionalResponse] = None
 
     class Config:
-        from_attributes = True
+        from_attributes = True 
+
+
