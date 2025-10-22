@@ -51,7 +51,7 @@ class Turno(Base):
     id = Column(Integer, primary_key=True, index=True)
     fecha = Column(Date)
     horario = Column(Time)
-    estado = Column(Enum("activo", "pasado", "cancelado", name="estado_turno"))
+    estado = Column(Enum("activo", "pasado", "cancelado", name="estado_turno", create_type=False))
     id_usuario = Column(Integer, ForeignKey("usuarios.id"))
     id_profesional = Column(Integer, ForeignKey("profesionales.id"))
 

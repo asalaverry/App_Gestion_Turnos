@@ -1,0 +1,5 @@
+# Forzar LF en scripts de shell para Linux/Render
+*.sh text eol=lf
+
+# Auto-detectar para el resto
+* text=auto
