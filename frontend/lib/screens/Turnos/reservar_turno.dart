@@ -378,7 +378,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                 _loadingEspecialidades
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<int>(
-                        value: _idEspecialidad,
+                        initialValue: _idEspecialidad,
                         items: _especialidades
                             .map((e) => DropdownMenuItem(
                                   value: e.id,
@@ -407,7 +407,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                 _loadingProfesionales
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<int?>(
-                        value: _idProfesional,
+                        initialValue: _idProfesional,
                         items: _profesionales.isEmpty
                             ? [
                                 // Si no hay profesionales, mostrar mensaje
@@ -506,7 +506,7 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
                 _loadingHorarios
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<String>(
-                        value: _horario,
+                        initialValue: _horario,
                         menuMaxHeight: 250, // ← Limita la altura del menú (aprox 5 items)
                         items: _horariosDisponibles.isEmpty
                             ? [const DropdownMenuItem(

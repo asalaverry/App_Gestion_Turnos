@@ -5,6 +5,7 @@ import '../Turnos/misTurnos.dart';
 import '../Turnos/reservar_turno.dart';
 import '../Turnos/gestion_turnos.dart';
 import '../Profesionales/profesionales.dart';
+import '../Especialidades/especialidades.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
@@ -143,12 +144,13 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           break;
 
-        case 'especialidades':
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ir a Especialidades')),
-          );
-          break;
+          case 'especialidades':
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EspecialidadesScreen()),
+            );
+            break;
 
         case 'profesionales':
           if (!context.mounted) return;
@@ -303,12 +305,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   _QuickButton(
-                    
                     icon: Icons.local_hospital,
                     label: 'Especialidades',
                     onTap: () {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(const SnackBar(content: Text('Ir a Especialidades')));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EspecialidadesScreen()),
+                      );
                     },
                   ),
                   _QuickButton(

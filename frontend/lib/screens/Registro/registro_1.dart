@@ -89,8 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                   primary: colorAcento,
                   secondary: colorAcento,
                   surface: colorSecundario,
-                ),
-            dialogBackgroundColor: colorSecundario,
+                ), dialogTheme: DialogThemeData(backgroundColor: colorSecundario),
           ),
           child: child!,
         );
@@ -613,7 +612,7 @@ class _CoberturaForm extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 )
               : DropdownButtonFormField<int>(
-                  value: obraSocialId,
+                  initialValue: obraSocialId,
                   decoration: dec('Obra Social'),
                   hint: const Text('Seleccioná tu obra social'),
                   items: [
@@ -628,7 +627,7 @@ class _CoberturaForm extends StatelessWidget {
                         value: obra.id,
                         child: Text(obra.nombre),
                       );
-                    }).toList(),
+                    }),
                   ],
                   onChanged: onObraSocialChanged,
                   validator: (v) => v == null ? 'Seleccioná una opción' : null,
