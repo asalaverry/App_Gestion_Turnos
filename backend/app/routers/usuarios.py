@@ -66,3 +66,91 @@ def actualizar_token(uid: str, token: str, db: Session = Depends(get_db)):
     return {"message": "Token actualizado correctamente"}
 
 
+# Obtener datos del usuario autenticado actual
+@router.get("/me", response_model=schemas.UsuarioResponse)
+def get_usuario_actual(
+    db: Session = Depends(get_db),
+    firebase_user: dict = Depends(get_current_firebase_user)
+):
+    uid = firebase_user.get("uid")
+    
+    usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return usuario
+
+
+# Actualizar datos personales del usuario actual
+@router.put("/me", response_model=schemas.UsuarioResponse)
+def actualizar_usuario_actual(
+    datos: schemas.UsuarioUpdate,
+    db: Session = Depends(get_db),
+    firebase_user: dict = Depends(get_current_firebase_user)
+):
+    uid = firebase_user.get("uid")
+    
+    usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Actualizar solo los campos proporcionados
+    if datos.nombre is not None:
+        usuario.nombre = datos.nombre
+    if datos.apellido is not None:
+        usuario.apellido = datos.apellido
+    if datos.documento is not None:
+        usuario.documento = datos.documento
+    if datos.fecha_nacimiento is not None:
+        usuario.fecha_nacimiento = datos.fecha_nacimiento
+    
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
+
+# Actualizar cobertura médica del usuario actual
+@router.put("/me/cobertura", response_model=schemas.UsuarioResponse)
+def actualizar_cobertura_actual(
+    datos: schemas.UsuarioCoberturaUpdate,
+    db: Session = Depends(get_db),
+    firebase_user: dict = Depends(get_current_firebase_user)
+):
+    uid = firebase_user.get("uid")
+    
+    usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Actualizar cobertura
+    if datos.id_obra_social is not None:
+        usuario.id_obra_social = datos.id_obra_social
+    if datos.plan_obra_social is not None:
+        usuario.plan_obra_social = datos.plan_obra_social
+    if datos.nro_afiliado is not None:
+        usuario.nro_afiliado = datos.nro_afiliado
+    
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
+
+# Eliminar cuenta del usuario actual
+@router.delete("/me")
+def eliminar_usuario_actual(
+    db: Session = Depends(get_db),
+    firebase_user: dict = Depends(get_current_firebase_user)
+):
+    uid = firebase_user.get("uid")
+    
+    usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Marcar como inactivo en lugar de eliminar físicamente (soft delete)
+    usuario.activo = False
+    db.commit()
+    
+    return {"message": "Cuenta eliminada correctamente"}
+
+
