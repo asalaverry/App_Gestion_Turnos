@@ -9,6 +9,7 @@ import '../Especialidades/especialidades.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
+import '../Perfil/perfil.dart';
 
 // Paleta
 /*const fondo = Color(0xFFF8FAFC);
@@ -162,9 +163,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         case 'perfil':
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ir a Mi perfil')),
-          );
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MiPerfilScreen()),
+            );
         break;
 
         case 'logout':
@@ -290,8 +292,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.person,
                     label: 'Mi Perfil',
                     onTap: () {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(const SnackBar(content: Text('Ir a Mi Perfil')));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MiPerfilScreen()),
+                      );
                     },
                   ),
                   _QuickButton(
