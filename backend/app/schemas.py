@@ -54,6 +54,17 @@ class UsuarioResponse(UsuarioBase):
 class UsuarioCheck(BaseModel):
     documento: str
 
+class UsuarioUpdate(BaseModel):
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    documento: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
+
+class UsuarioCoberturaUpdate(BaseModel):
+    id_obra_social: Optional[int] = None
+    plan_obra_social: Optional[str] = None
+    nro_afiliado: Optional[str] = None
+
 
 # ESPECIALIDADES
 class EspecialidadBase(BaseModel):

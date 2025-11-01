@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
 import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
+import 'package:flutter_application_1/services/usuario_service.dart';
 import '../Turnos/reservar_turno.dart';
 
 class MiPerfilScreen extends StatefulWidget {
@@ -13,15 +14,23 @@ class MiPerfilScreen extends StatefulWidget {
 
 class _MiPerfilScreenState extends State<MiPerfilScreen> {
   int _bottomIndex = 0;
+  bool _isLoading = true;
+  // ignore: unused_field
+  int? _usuarioId;
 
-  // ====== MOCK DATA (maqueta) ======
-  String _nombreCompleto = 'Nombre Apellido';
-  String _email = 'gestionturnos@gmail.com';
-  String _fechaNac = '02/09/2025';
-  String _dni = '44567893';
-  String _obraSocial = 'Osde';
-  String _plan = '000';
-  String _numeroAfiliado = '123456789';
+  // ====== DATOS DEL USUARIO ======
+  String _nombreCompleto = '';
+  String _email = '';
+  String _fechaNac = '';
+  String _dni = '';
+  String _obraSocial = '';
+  String _plan = '';
+  String _numeroAfiliado = '';
+  int? _idObraSocial;
+
+  // ====== Lista de obras sociales ======
+  List<Map<String, dynamic>> _obrasSociales = [];
+  bool _isLoadingObras = false;
 
   // ====== Edit mode toggles ======
   bool _editDatos = false;
@@ -40,14 +49,81 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   @override
   void initState() {
     super.initState();
-    _nombreCtrl = TextEditingController(text: _nombreCompleto);
-    _emailCtrl = TextEditingController(text: _email);
-    _fechaNacCtrl = TextEditingController(text: _fechaNac);
-    _dniCtrl = TextEditingController(text: _dni);
+    _nombreCtrl = TextEditingController();
+    _emailCtrl = TextEditingController();
+    _fechaNacCtrl = TextEditingController();
+    _dniCtrl = TextEditingController();
 
-    _obraCtrl = TextEditingController(text: _obraSocial);
-    _planCtrl = TextEditingController(text: _plan);
-    _afiliadoCtrl = TextEditingController(text: _numeroAfiliado);
+    _obraCtrl = TextEditingController();
+    _planCtrl = TextEditingController();
+    _afiliadoCtrl = TextEditingController();
+
+    _cargarDatosUsuario();
+  }
+
+  /// Cargar datos del usuario desde la base de datos
+  Future<void> _cargarDatosUsuario() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final datos = await UsuarioService.obtenerUsuarioActual();
+      
+      if (datos == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al cargar los datos del perfil')),
+          );
+        }
+        return;
+      }
+
+      // Extraer datos
+      _usuarioId = datos['id'];
+      _email = datos['email'] ?? '';
+      final nombre = datos['nombre'] ?? '';
+      final apellido = datos['apellido'] ?? '';
+      _nombreCompleto = '$nombre $apellido'.trim();
+      _dni = datos['documento'] ?? '';
+      
+      // Formatear fecha de nacimiento de YYYY-MM-DD a DD/MM/YYYY
+      final fechaStr = datos['fecha_nacimiento'] ?? '';
+      if (fechaStr.isNotEmpty) {
+        try {
+          final partes = fechaStr.split('-');
+          if (partes.length == 3) {
+            _fechaNac = '${partes[2]}/${partes[1]}/${partes[0]}';
+          }
+        } catch (_) {
+          _fechaNac = fechaStr;
+        }
+      }
+
+      // Datos de obra social
+      _idObraSocial = datos['id_obra_social'];
+      if (datos['obra_social'] != null) {
+        _obraSocial = datos['obra_social']['nombre'] ?? '';
+      }
+      _plan = datos['plan_obra_social'] ?? '';
+      _numeroAfiliado = datos['nro_afiliado'] ?? '';
+
+      // Actualizar controllers
+      _nombreCtrl.text = _nombreCompleto;
+      _emailCtrl.text = _email;
+      _fechaNacCtrl.text = _fechaNac;
+      _dniCtrl.text = _dni;
+      _obraCtrl.text = _obraSocial;
+      _planCtrl.text = _plan;
+      _afiliadoCtrl.text = _numeroAfiliado;
+
+      setState(() => _isLoading = false);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -64,7 +140,19 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
 
   // ====== Acciones ======
   void _toggleEditDatos() => setState(() => _editDatos = !_editDatos);
-  void _toggleEditCobertura() => setState(() => _editCobertura = !_editCobertura);
+  
+  void _toggleEditCobertura() async {
+    if (!_editCobertura && _obrasSociales.isEmpty) {
+      // Cargar obras sociales solo cuando se activa el modo edición
+      setState(() => _isLoadingObras = true);
+      final obras = await UsuarioService.obtenerObrasSociales();
+      setState(() {
+        _obrasSociales = obras;
+        _isLoadingObras = false;
+      });
+    }
+    setState(() => _editCobertura = !_editCobertura);
+  }
 
   void _cancelEditDatos() {
     setState(() {
@@ -81,36 +169,97 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       _obraCtrl.text = _obraSocial;
       _planCtrl.text = _plan;
       _afiliadoCtrl.text = _numeroAfiliado;
+      // Restaurar el ID original
+      if (_idObraSocial != null) {
+        final obraOriginal = _obrasSociales.firstWhere(
+          (o) => o['id'] == _idObraSocial,
+          orElse: () => {},
+        );
+        if (obraOriginal.isNotEmpty) {
+          _obraCtrl.text = obraOriginal['nombre'] ?? _obraSocial;
+        }
+      }
     });
   }
 
   Future<void> _saveDatos() async {
-    // TODO: PUT /usuarios/me
-    setState(() {
-      _nombreCompleto = _nombreCtrl.text.trim();
-      _fechaNac = _fechaNacCtrl.text.trim();
-      _dni = _dniCtrl.text.trim();
-      _editDatos = false;
-    });
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Datos personales guardados (maqueta)')),
-      );
+    // Separar nombre y apellido
+    final nombreCompleto = _nombreCtrl.text.trim();
+    final partes = nombreCompleto.split(' ');
+    final nombre = partes.isNotEmpty ? partes[0] : '';
+    final apellido = partes.length > 1 ? partes.sublist(1).join(' ') : '';
+
+    // Convertir fecha de DD/MM/YYYY a YYYY-MM-DD
+    final fechaInput = _fechaNacCtrl.text.trim();
+    String fechaISO = fechaInput;
+    try {
+      final partesFecha = fechaInput.split('/');
+      if (partesFecha.length == 3) {
+        fechaISO = '${partesFecha[2]}-${partesFecha[1]}-${partesFecha[0]}';
+      }
+    } catch (_) {}
+
+    final resultado = await UsuarioService.actualizarDatosPersonales(
+      nombre: nombre,
+      apellido: apellido,
+      documento: _dniCtrl.text.trim(),
+      fechaNacimiento: fechaISO,
+    );
+
+    if (resultado['success'] == true) {
+      setState(() {
+        _nombreCompleto = nombreCompleto;
+        _fechaNac = fechaInput;
+        _dni = _dniCtrl.text.trim();
+        _editDatos = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Datos personales guardados exitosamente')),
+        );
+      }
+    } else {
+      if (mounted) {
+        final mensaje = resultado['message'] ?? 'Error al guardar los datos';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mensaje)),
+        );
+      }
     }
   }
 
   Future<void> _saveCobertura() async {
-    // TODO: PUT /usuarios/me/cobertura
-    setState(() {
-      _obraSocial = _obraCtrl.text.trim();
-      _plan = _planCtrl.text.trim();
-      _numeroAfiliado = _afiliadoCtrl.text.trim();
-      _editCobertura = false;
-    });
-    if (mounted) {
+    if (_idObraSocial == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cobertura médica guardada (maqueta)')),
+        const SnackBar(content: Text('Error: No se pudo obtener el ID de obra social')),
       );
+      return;
+    }
+
+    final exitoso = await UsuarioService.actualizarCobertura(
+      idObraSocial: _idObraSocial!,
+      planObraSocial: _planCtrl.text.trim(),
+      nroAfiliado: _afiliadoCtrl.text.trim(),
+    );
+
+    if (exitoso) {
+      setState(() {
+        _obraSocial = _obraCtrl.text.trim();
+        _plan = _planCtrl.text.trim();
+        _numeroAfiliado = _afiliadoCtrl.text.trim();
+        _editCobertura = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cobertura médica guardada exitosamente')),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al guardar la cobertura')),
+        );
+      }
     }
   }
 
@@ -156,12 +305,21 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   }
 
   Future<void> _eliminarCuenta() async {
-    // TODO: DELETE /usuarios/me + logout
+    final exitoso = await UsuarioService.eliminarCuenta();
+
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cuenta eliminada (maqueta).')),
-    );
-    // TODO: Redirigir a login
+
+    if (exitoso) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cuenta eliminada exitosamente')),
+      );
+      // Redirigir al login
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al eliminar la cuenta')),
+      );
+    }
   }
 
   @override
@@ -169,46 +327,48 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     return Scaffold(
       backgroundColor: pal.fondo,
       appBar: CustomTopBar.back(title: 'Perfil'),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ===== Datos personales =====
-              _PerfilCard(
-                title: 'Datos Personales',
-                onEdit: _toggleEditDatos,
-                children: _editDatos ? _datosPersonalesEdit() : _datosPersonalesView(),
-              ),
-              const SizedBox(height: 12),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ===== Datos personales =====
+                    _PerfilCard(
+                      title: 'Datos Personales',
+                      onEdit: _toggleEditDatos,
+                      children: _editDatos ? _datosPersonalesEdit() : _datosPersonalesView(),
+                    ),
+                    const SizedBox(height: 12),
 
-              // ===== Cobertura Médica =====
-              _PerfilCard(
-                title: 'Cobertura Medica',
-                onEdit: _toggleEditCobertura,
-                children: _editCobertura ? _coberturaEdit() : _coberturaView(),
-              ),
+                    // ===== Cobertura Médica =====
+                    _PerfilCard(
+                      title: 'Cobertura Medica',
+                      onEdit: _toggleEditCobertura,
+                      children: _editCobertura ? _coberturaEdit() : _coberturaView(),
+                    ),
 
-              const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-              // Botón eliminar
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE57373),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                    // Botón eliminar
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE57373),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _confirmarEliminarCuenta,
+                      child: const Text('Eliminar cuenta', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ],
                 ),
-                onPressed: _confirmarEliminarCuenta,
-                child: const Text('Eliminar cuenta', style: TextStyle(fontWeight: FontWeight.w700)),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
 
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _bottomIndex,
@@ -285,7 +445,42 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       ];
 
   List<Widget> _coberturaEdit() => [
-        _underlineField(label: 'Obra Social', controller: _obraCtrl, textInputAction: TextInputAction.next),
+        // Selector de Obra Social
+        if (_isLoadingObras)
+          const Center(child: CircularProgressIndicator())
+        else
+          DropdownButtonFormField<int>(
+            value: _idObraSocial,
+            decoration: InputDecoration(
+              labelText: 'Obra Social',
+              isDense: true,
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: pal.colorAcento, width: 1.6),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.black.withOpacity(.25)),
+              ),
+            ),
+            items: _obrasSociales.map((obra) {
+              return DropdownMenuItem<int>(
+                value: obra['id'] as int,
+                child: Text(obra['nombre'] as String),
+              );
+            }).toList(),
+            onChanged: (nuevoId) {
+              setState(() {
+                _idObraSocial = nuevoId;
+                final obraSeleccionada = _obrasSociales.firstWhere(
+                  (o) => o['id'] == nuevoId,
+                  orElse: () => {},
+                );
+                if (obraSeleccionada.isNotEmpty) {
+                  _obraCtrl.text = obraSeleccionada['nombre'] ?? '';
+                  _obraSocial = obraSeleccionada['nombre'] ?? '';
+                }
+              });
+            },
+          ),
         const SizedBox(height: 6),
         _underlineField(label: 'Plan', controller: _planCtrl, textInputAction: TextInputAction.next),
         const SizedBox(height: 6),
