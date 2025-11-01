@@ -35,7 +35,8 @@ class UsuarioService {
   }
 
   /// Actualiza los datos personales del usuario
-  static Future<bool> actualizarDatosPersonales({
+  /// Devuelve un Map con 'success' (bool) y 'message' (String?)
+  static Future<Map<String, dynamic>> actualizarDatosPersonales({
     required String nombre,
     required String apellido,
     required String documento,
@@ -44,7 +45,7 @@ class UsuarioService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('No hay usuario autenticado');
+        return {'success': false, 'message': 'No hay usuario autenticado'};
       }
 
       final idToken = await user.getIdToken();
@@ -63,10 +64,21 @@ class UsuarioService {
         }),
       );
 
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return {'success': true};
+      } else {
+        // Intentar extraer el mensaje de error del backend
+        try {
+          final errorData = jsonDecode(response.body);
+          final errorMessage = errorData['detail'] ?? 'Error al guardar los datos';
+          return {'success': false, 'message': errorMessage};
+        } catch (_) {
+          return {'success': false, 'message': 'Error al guardar los datos'};
+        }
+      }
     } catch (e) {
       print('Error en actualizarDatosPersonales: $e');
-      return false;
+      return {'success': false, 'message': 'Error de conexión: $e'};
     }
   }
 
@@ -104,7 +116,8 @@ class UsuarioService {
     }
   }
 
-  /// Elimina la cuenta del usuario (tanto en Firebase como en la DB)
+  /// Elimina la cuenta del usuario (marca como inactivo en DB, cancela turnos y elimina de Firebase)
+  /// El backend se encarga de todo: marcar inactivo, cancelar turnos y eliminar de Firebase
   static Future<bool> eliminarCuenta() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -114,7 +127,10 @@ class UsuarioService {
 
       final idToken = await user.getIdToken();
 
-      // Primero eliminar de la base de datos
+      // El backend se encarga de:
+      // 1. Marcar usuario como inactivo (soft delete)
+      // 2. Cancelar todos los turnos activos del usuario
+      // 3. Eliminar la cuenta de Firebase Authentication
       final response = await http.delete(
         Uri.parse('${ApiConfig.baseUrl}/usuarios/me'),
         headers: {
@@ -124,8 +140,7 @@ class UsuarioService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        // Luego eliminar de Firebase
-        await user.delete();
+        // Solo cerrar sesión localmente (el backend ya eliminó de Firebase)
         await FirebaseAuth.instance.signOut();
         return true;
       }
@@ -134,6 +149,28 @@ class UsuarioService {
     } catch (e) {
       print('Error en eliminarCuenta: $e');
       return false;
+    }
+  }
+
+  /// Obtiene la lista de todas las obras sociales disponibles
+  static Future<List<Map<String, dynamic>>> obtenerObrasSociales() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/obras-sociales/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => e as Map<String, dynamic>).toList();
+      } else {
+        throw Exception('Error al obtener obras sociales: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error en obtenerObrasSociales: $e');
+      return [];
     }
   }
 }

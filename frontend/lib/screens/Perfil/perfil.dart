@@ -28,6 +28,10 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   String _numeroAfiliado = '';
   int? _idObraSocial;
 
+  // ====== Lista de obras sociales ======
+  List<Map<String, dynamic>> _obrasSociales = [];
+  bool _isLoadingObras = false;
+
   // ====== Edit mode toggles ======
   bool _editDatos = false;
   bool _editCobertura = false;
@@ -136,7 +140,19 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
 
   // ====== Acciones ======
   void _toggleEditDatos() => setState(() => _editDatos = !_editDatos);
-  void _toggleEditCobertura() => setState(() => _editCobertura = !_editCobertura);
+  
+  void _toggleEditCobertura() async {
+    if (!_editCobertura && _obrasSociales.isEmpty) {
+      // Cargar obras sociales solo cuando se activa el modo edición
+      setState(() => _isLoadingObras = true);
+      final obras = await UsuarioService.obtenerObrasSociales();
+      setState(() {
+        _obrasSociales = obras;
+        _isLoadingObras = false;
+      });
+    }
+    setState(() => _editCobertura = !_editCobertura);
+  }
 
   void _cancelEditDatos() {
     setState(() {
@@ -153,6 +169,16 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       _obraCtrl.text = _obraSocial;
       _planCtrl.text = _plan;
       _afiliadoCtrl.text = _numeroAfiliado;
+      // Restaurar el ID original
+      if (_idObraSocial != null) {
+        final obraOriginal = _obrasSociales.firstWhere(
+          (o) => o['id'] == _idObraSocial,
+          orElse: () => {},
+        );
+        if (obraOriginal.isNotEmpty) {
+          _obraCtrl.text = obraOriginal['nombre'] ?? _obraSocial;
+        }
+      }
     });
   }
 
@@ -173,14 +199,14 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       }
     } catch (_) {}
 
-    final exitoso = await UsuarioService.actualizarDatosPersonales(
+    final resultado = await UsuarioService.actualizarDatosPersonales(
       nombre: nombre,
       apellido: apellido,
       documento: _dniCtrl.text.trim(),
       fechaNacimiento: fechaISO,
     );
 
-    if (exitoso) {
+    if (resultado['success'] == true) {
       setState(() {
         _nombreCompleto = nombreCompleto;
         _fechaNac = fechaInput;
@@ -194,8 +220,9 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       }
     } else {
       if (mounted) {
+        final mensaje = resultado['message'] ?? 'Error al guardar los datos';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al guardar los datos')),
+          SnackBar(content: Text(mensaje)),
         );
       }
     }
@@ -418,7 +445,42 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       ];
 
   List<Widget> _coberturaEdit() => [
-        _underlineField(label: 'Obra Social', controller: _obraCtrl, textInputAction: TextInputAction.next),
+        // Selector de Obra Social
+        if (_isLoadingObras)
+          const Center(child: CircularProgressIndicator())
+        else
+          DropdownButtonFormField<int>(
+            value: _idObraSocial,
+            decoration: InputDecoration(
+              labelText: 'Obra Social',
+              isDense: true,
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: pal.colorAcento, width: 1.6),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.black.withOpacity(.25)),
+              ),
+            ),
+            items: _obrasSociales.map((obra) {
+              return DropdownMenuItem<int>(
+                value: obra['id'] as int,
+                child: Text(obra['nombre'] as String),
+              );
+            }).toList(),
+            onChanged: (nuevoId) {
+              setState(() {
+                _idObraSocial = nuevoId;
+                final obraSeleccionada = _obrasSociales.firstWhere(
+                  (o) => o['id'] == nuevoId,
+                  orElse: () => {},
+                );
+                if (obraSeleccionada.isNotEmpty) {
+                  _obraCtrl.text = obraSeleccionada['nombre'] ?? '';
+                  _obraSocial = obraSeleccionada['nombre'] ?? '';
+                }
+              });
+            },
+          ),
         const SizedBox(height: 6),
         _underlineField(label: 'Plan', controller: _planCtrl, textInputAction: TextInputAction.next),
         const SizedBox(height: 6),

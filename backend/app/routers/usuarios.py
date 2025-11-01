@@ -94,6 +94,15 @@ def actualizar_usuario_actual(
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
+    # Verificar si el DNI ya está en uso por otro usuario
+    if datos.documento is not None and datos.documento != usuario.documento:
+        dni_existente = db.query(models.Usuario).filter(
+            models.Usuario.documento == datos.documento,
+            models.Usuario.id != usuario.id
+        ).first()
+        if dni_existente:
+            raise HTTPException(status_code=400, detail="Ya existe un usuario con ese DNI")
+    
     # Actualizar solo los campos proporcionados
     if datos.nombre is not None:
         usuario.nombre = datos.nombre
@@ -141,15 +150,34 @@ def eliminar_usuario_actual(
     db: Session = Depends(get_db),
     firebase_user: dict = Depends(get_current_firebase_user)
 ):
+    from firebase_admin import auth
+    
     uid = firebase_user.get("uid")
     
     usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    # Marcar como inactivo en lugar de eliminar físicamente (soft delete)
+    # 1. Cancelar todos los turnos activos del usuario
+    turnos_activos = db.query(models.Turno).filter(
+        models.Turno.id_usuario == usuario.id,
+        models.Turno.estado == "activo"
+    ).all()
+    
+    for turno in turnos_activos:
+        turno.estado = "cancelado"
+    
+    # 2. Marcar como inactivo en la base de datos (soft delete)
     usuario.activo = False
     db.commit()
+    
+    # 3. Eliminar la cuenta de Firebase Authentication
+    try:
+        auth.delete_user(uid)
+    except Exception as e:
+        # Si falla la eliminación en Firebase, registrar el error pero continuar
+        print(f"⚠️ Error al eliminar usuario de Firebase: {e}")
+        # No lanzamos excepción porque el usuario ya está inactivo en la DB
     
     return {"message": "Cuenta eliminada correctamente"}
 
