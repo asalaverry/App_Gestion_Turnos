@@ -11,14 +11,6 @@ import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
 import '../Perfil/perfil.dart';
 
-// Paleta
-/*const fondo = Color(0xFFF8FAFC);
-const colorPrimario = Color(0xFF86B6F6);
-const colorSecundario = Color(0xFFEEF5FF);
-const colorAcento = Color(0xFF2C6E7B);
-const colorAcento2 = Color(0xFF3A8FA0);
-const kFondo = Color(0xFFF8FAFC);
-const colorAtencion = Color.fromRGBO(246, 122, 122, 100);*/
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,74 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: pal.fondo,
-      /*appBar: AppBar(
-        backgroundColor: pal.colorPrimario,
-        elevation: 0,
-        foregroundColor: pal.fondo,
-        titleSpacing: 0,
-        leading: PopupMenuButton<String>(
-          icon: const Icon(Icons.menu),
-          position: PopupMenuPosition.under,           // aparece debajo del botón
-          offset: const Offset(0, 8),                  // separacion
-          color: pal.colorPrimario,                        // fondo azul como la barra
-          elevation: 6,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          onSelected: (value) async {
-            switch (value) {
-              case 'mis_turnos':
-                // Navigator.push(context, MaterialPageRoute(builder: (_) => const MisTurnosScreen()));
-                break;
-              case 'historial':
-                break;
-              case 'especialidades':
-                break;
-              case 'profesionales':
-                break;
-              case 'perfil':
-                break;
-              case 'logout':
-        
-                await FirebaseAuth.instance.signOut();
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                    );
-                  break;
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(value: 'mis_turnos',      child: const Text('Mis turnos',        style: TextStyle(color: Colors.white))),
-            PopupMenuItem(value: 'historial',       child: const Text('Historial turnos',  style: TextStyle(color: Colors.white))),
-            PopupMenuItem(value: 'especialidades',  child: const Text('Especialidades',    style: TextStyle(color: Colors.white))),
-            PopupMenuItem(value: 'profesionales',   child: const Text('Profesionales',     style: TextStyle(color: Colors.white))),
-            PopupMenuItem(value: 'perfil',          child: const Text('Mi perfil',         style: TextStyle(color: Colors.white))),
-            const PopupMenuDivider(),
-            PopupMenuItem(value: 'logout',          child: const Text('Cerrar sesión',     style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
-          ],
-        ),
-        title: const Text(''),
-        actions: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_none),
-                onPressed: () {
-                  setState(() => _notifCount = 0);
-                },
-              ),
-              if (_notifCount > 0)
-                const Positioned(
-                  right: 10,
-                  top: 10,
-                  child: _Badge(count: 3),
-                ),
-            ],
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),*/
       appBar: CustomTopBar.home(
         title: '',
         notifCount: _notifCount,
@@ -337,27 +261,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      // Bottom nav
-      /*bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colorPrimario,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)],
-        ),
-        child: SafeArea(
-          top: false,
-          child: NavigationBar(
-            height: 68,
-            backgroundColor: colorPrimario,
-            indicatorColor: Colors.white.withValues(alpha: 0.08),
-            selectedIndex: _bottomIndex,
-            onDestinationSelected: (i) => setState(() => _bottomIndex = i),
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home_outlined, color: Colors.white), label: ''),
-              NavigationDestination(icon: Icon(Icons.arrow_back_ios_new, color: Colors.white), label: ''),
-            ],
-          ),
-        ),
-      ),*/
       bottomNavigationBar: CustomBottomNav(
       currentIndex: _bottomIndex,
       onDestinationSelected: (i) => setState(() => _bottomIndex = i),

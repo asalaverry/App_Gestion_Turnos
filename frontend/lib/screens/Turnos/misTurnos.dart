@@ -6,15 +6,6 @@ import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
 
 
-/*
-const fondo = Color(0xFFF8FAFC);
-const colorPrimario = Color(0xFF86B6F6);
-const colorSecundario = Color(0xFFEEF5FF);
-const colorAcento = Color(0xFF2C6E7B);
-const colorAcento2 = Color(0xFF3A8FA0);
-const colorFondo = Color(0xFFF8FAFC);
-const colorAtencion = Color.fromRGBO(246, 122, 122, 100);*/
-
 // ===== Pantalla Mis Turnos =====
 class MisTurnosScreen extends StatefulWidget {
   const MisTurnosScreen({super.key});
@@ -33,17 +24,6 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
 
     return Scaffold(
       backgroundColor: pal.fondo,
-      /*appBar: AppBar(
-        backgroundColor: pal.colorPrimario,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: const Text('Mis Turnos'),
-      ),*/
       appBar: CustomTopBar.back(
         title: 'Mis Turnos',
       ),
@@ -103,42 +83,7 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
         ),
       ),
 
-      // Bottom nav igual al Home
-      /*bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: pal.colorPrimario,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
-        ),
-        child: SafeArea(
-          top: false,
-          child: NavigationBar(
-            height: 68,
-            backgroundColor: pal.colorPrimario,
-            indicatorColor: Colors.white.withOpacity(0.08),
-            selectedIndex: _bottomIndex,
-            onDestinationSelected: (i) {
-              setState(() => _bottomIndex = i);
-              if (i == 0) {
-                // Home
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              } else {
-                // Atrás
-                Navigator.of(context).maybePop();
-              }
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined, color: Colors.white),
-                label: '',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                label: '',
-              ),
-            ],
-          ),
-        ),
-      ),*/
+      
     bottomNavigationBar: CustomBottomNav(
       currentIndex: _bottomIndex,
       onDestinationSelected: (i) {

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'recuperarContrasena_3.dart'; 
+import 'recuperarContrasena_3.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
-const kBrand = Color(0x9C176B87);
-const kFondo = Color(0xFFF8FAFC);
 
 class Recuperarcontrasena2 extends StatefulWidget {
   final String initialEmail;
@@ -13,31 +12,12 @@ class Recuperarcontrasena2 extends StatefulWidget {
 }
 
 class _Recuperarcontrasena2State extends State<Recuperarcontrasena2> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes =
-      List.generate(6, (_) => FocusNode());
-
-  @override
-  void dispose() {
-    for (var c in _controllers) {
-      c.dispose();
-    }
-    for (var f in _focusNodes) {
-      f.dispose();
-    }
-    super.dispose();
-  }
+  bool _reenviando = false;
 
   void _continuar() {
-    String codigo = _controllers.map((c) => c.text).join();
-    print("Código ingresado: $codigo");
-    // Navegar a la pantalla 3
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const RecuperarContrasena3(),
-      ),
+      MaterialPageRoute(builder: (_) => const RecuperarContrasena3()),
     );
   }
 
@@ -45,135 +25,169 @@ class _Recuperarcontrasena2State extends State<Recuperarcontrasena2> {
     Navigator.pop(context);
   }
 
-  void _reenviar() {
-    print("Reenviar código");
+  Future<void> _reenviar() async {
+    setState(() => _reenviando = true);
+    try {
+      // OPCIONAL — si usás Firebase:
+      // await FirebaseAuth.instance.sendPasswordResetEmail(email: widget.initialEmail);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Reenviamos el correo a ${widget.initialEmail}")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No se pudo reenviar: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => _reenviando = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kFondo,
+      backgroundColor: pal.fondo,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/logo.png', height: 120),
+              Image.asset("assets/logo.png", height: 120),
               const SizedBox(height: 32),
+
+              // ========= CARD =========
               Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(26),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  color: pal.colorSecundario,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black12,
                       blurRadius: 8,
                       offset: Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
+
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Ingresá el código que recibiste en tu correo',
+                      "Revisá tu correo electrónico",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Te enviamos a tu correo un código de seis dígitos que vencerá en 15 minutos, escribilo a continuación.',
+                    const SizedBox(height: 14),
+
+                    Text(
+                      "Te enviamos un enlace para restablecer tu contraseña a:\n"
+                      "${widget.initialEmail}\n\n"
+                      "El enlace vencerá en 15 minutos.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                        height: 1.4,
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Icon(Icons.vpn_key, size: 36, color: kBrand),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(6, (index) {
-                        return SizedBox(
-                          width: 40,
-                          child: TextField(
-                            controller: _controllers[index],
-                            focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            maxLength: 1,
-                            autofocus: index == 0,
-                            onChanged: (value) {
-                              if (value.isNotEmpty && index < 5) {
-                                FocusScope.of(context)
-                                    .requestFocus(_focusNodes[index + 1]);
-                              } else if (value.isEmpty && index > 0) {
-                                FocusScope.of(context)
-                                    .requestFocus(_focusNodes[index - 1]);
-                              }
-                            },
-                            decoration: InputDecoration(
-                              counterText: "",
-                              filled: true,
-                              fillColor: Colors.blue[50],
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 24),
+
+                    const SizedBox(height: 22),
+                    Icon(Icons.vpn_key, size: 38, color: pal.colorAcento),
+                    const SizedBox(height: 26),
+
+                    // ========= Botón Continuar =========
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _continuar,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: kBrand,
+                          backgroundColor: pal.colorAcento,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(48),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                            borderRadius: BorderRadius.circular(50),   
+                          ),
                         ),
-                        child: const Text('Continuar'),
+                        child: const Text(
+                          "Continuar",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+
+                    const SizedBox(height: 12),
+
+                    // ========= Botón Cancelar =========
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
                         onPressed: _cancelar,
                         style: OutlinedButton.styleFrom(
+                          foregroundColor: pal.colorAcento,   
+                          side: BorderSide(
+                             color: pal.colorAcento, 
+                            width: 1.2,
+                          ),
+                          minimumSize: const Size.fromHeight(48),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                            borderRadius: BorderRadius.circular(50),   
+                          ),
                         ),
-                        child: const Text('Cancelar'),
+                        child: const Text(
+                          "Cancelar",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: pal.colorAcento, 
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 20),
+
                     GestureDetector(
-                      onTap: _reenviar,
+                      onTap: _reenviando ? null : _reenviar,
                       child: RichText(
+                        textAlign: TextAlign.center,
                         text: TextSpan(
-                          text: '¿No recibiste el correo? ',
+                          text: "¿No recibiste el correo? ",
                           style: const TextStyle(color: Colors.black54),
                           children: [
                             TextSpan(
-                              text: 'Reenviar',
+                              text: _reenviando ? "Reenviando…" : "Reenviar",
                               style: TextStyle(
-                                color: Colors.purple[700],
-                                fontWeight: FontWeight.bold,
+                                color: pal.colorAcento,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    )
+                    ),
+
+                    const SizedBox(height: 6),
+                    const Text(
+                      "Recordá revisar la carpeta de spam.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.black45,
+                        fontSize: 12.5,
+                      ),
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../Home/home_screen.dart';
 import '../Registro/registro_1.dart';
 import '../RecuperarContraseña/recuperarContrasena_1.dart'; 
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
 const fondo = Color(0xFFF8FAFC);
 const colorPrimario = Color(0xFF86B6F6); 
@@ -39,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       data: Theme.of(context).copyWith(
         inputDecorationTheme: InputDecorationTheme(
           labelStyle: const TextStyle(color: Colors.black54),
-          floatingLabelStyle: const TextStyle(color: colorPrimario),
+          floatingLabelStyle: const TextStyle(color: pal.colorPrimario),
           border: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
@@ -49,14 +50,14 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           focusedBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
-            borderSide: BorderSide(color: colorPrimario, width: 1.2),
+            borderSide: BorderSide(color: pal.colorPrimario, width: 1.2),
           ),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
         ),
       ),
       child: Scaffold(
-        backgroundColor: kFondo,
+        backgroundColor: pal.fondo,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Email
                   TextField(
                     controller: _email,
-                    cursorColor: colorAcento,
+                    cursorColor: pal.colorAcento,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(labelText: 'Email'),
                   ),
@@ -80,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Contraseña
                   TextField(
                     controller: _password,
-                    cursorColor: colorAcento,
+                    cursorColor: pal.colorAcento,
                     obscureText: _obscure,
                     decoration: InputDecoration(
                       labelText: 'Contraseña',
@@ -92,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // Recuperar contraseña → ahora va a pantalla 1
+                  
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -113,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Botón Iniciar sesión
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorAcento,
+                      backgroundColor: pal.colorAcento,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
@@ -171,8 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Botón Registrarse
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: colorAcento,
-                      side: const BorderSide(color: colorAcento, width: 2),
+                      foregroundColor: pal.colorAcento,
+                      side: const BorderSide(color: pal.colorAcento, width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
                     ),
