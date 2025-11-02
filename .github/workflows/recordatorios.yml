@@ -2,7 +2,7 @@ name: Recordatorios de turnos
 
 on:
   schedule:
-    - cron: "0,30 12-21 * * *"  # cada 30 min entre 9 y 18 hora Argentina (UTC-3)
+    - cron: "0,30 * * * *"  # cada 30 minutos, todo el día, todos los días
   workflow_dispatch:
 
 jobs:
