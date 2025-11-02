@@ -26,20 +26,19 @@ def _combinar_fecha_hora(fecha_date, hora_time) -> datetime:
     )
 
 @router.post("/run")
-def enviar_recordatorios_24h(
+def enviar_recordatorios_12h(
     db: Session = Depends(get_db),
     x_cron_key: str = Header(None),
 ):
     """
     - Protegido con X-CRON-KEY.
-    - Busca turnos activos ~24h antes.
-    - Envía push y marca recordatorio_24h = True.
+    - Busca turnos activos ~12h antes.
+    - Envía push y marca recordatorio_12h = True.
     """
 
     # 1. Seguridad: validar secret
     cron_secret_env = os.getenv("CRON_SECRET")
     if cron_secret_env is None:
-        # Si te olvidaste de cargarlo en Render, prefiero que grite feo
         raise HTTPException(status_code=500, detail="CRON_SECRET no configurado en el servidor")
 
     if x_cron_key != cron_secret_env:
@@ -47,11 +46,11 @@ def enviar_recordatorios_24h(
 
     # 2. Lógica de recordatorios
     ahora = datetime.utcnow()
-    objetivo = ahora + timedelta(hours=24)
+    objetivo = ahora + timedelta(hours=12)   # 🔹 CAMBIO: antes decía 24
 
-    # Ventana de tolerancia +-5 min alrededor de 'ahora+24h'
+    # Ventana de tolerancia ±5 min
     ventana_inicio = objetivo - timedelta(minutes=5)
-    ventana_fin    = objetivo + timedelta(minutes=5)
+    ventana_fin = objetivo + timedelta(minutes=5)
 
     # Buscamos turnos candidatos
     turnos = (
@@ -60,8 +59,8 @@ def enviar_recordatorios_24h(
         .join(models.Profesional, models.Turno.id_profesional == models.Profesional.id)
         .filter(
             models.Turno.estado == "activo",
-            models.Turno.recordatorio_24h == False,            # no avisado todavía
-            models.Usuario.device_token.isnot(None),           # tiene token FCM
+            models.Turno.recordatorio_24h == False,  # podés cambiarlo a recordatorio_12h si agregás ese campo
+            models.Usuario.device_token.isnot(None),
         )
         .all()
     )
@@ -71,14 +70,13 @@ def enviar_recordatorios_24h(
     for turno in turnos:
         dt_turno = _combinar_fecha_hora(turno.fecha, turno.horario)
 
-        # ¿cae dentro de la ventana (24h ±5min)?
         if ventana_inicio <= dt_turno <= ventana_fin:
             usuario = turno.usuario
             profesional = turno.profesional
 
             token = usuario.device_token
             if not token:
-                continue  # por las dudas
+                continue
 
             titulo = "Recordatorio de turno"
             cuerpo = (
@@ -89,8 +87,7 @@ def enviar_recordatorios_24h(
 
             resp = _send_push(token, titulo, cuerpo)
 
-            # marcamos que ya se notificó este turno
-            turno.recordatorio_24h = True
+            turno.recordatorio_24h = True  # o recordatorio_12h si lo renombrás
 
             enviados.append({
                 "turno_id": turno.id,
@@ -102,7 +99,6 @@ def enviar_recordatorios_24h(
                 "fcm_response": resp,
             })
 
-    # persistimos el flag recordatorio_24h=True
     db.commit()
 
     return {
