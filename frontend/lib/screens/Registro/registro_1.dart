@@ -4,6 +4,7 @@ import 'registro_2.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../config/api.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
 
 const fondo = Color(0xFFF8FAFC);
@@ -86,10 +87,10 @@ class _RegisterScreenState extends State<RegisterScreen>
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: colorAcento,
-                  secondary: colorAcento,
-                  surface: colorSecundario,
-                ), dialogTheme: DialogThemeData(backgroundColor: colorSecundario),
+                  primary: pal.colorAcento,
+                  secondary: pal.colorAcento,
+                  surface: pal.colorSecundario,
+                ), dialogTheme: DialogThemeData(backgroundColor: pal.colorSecundario),
           ),
           child: child!,
         );
@@ -250,20 +251,20 @@ class _RegisterScreenState extends State<RegisterScreen>
         labelText: label,
         border: _tfBorder(),
         enabledBorder: _tfBorder(),
-        focusedBorder: _tfBorder(colorPrimario),
+        focusedBorder: _tfBorder(pal.colorPrimario),
         suffixIcon: suffix,
-        floatingLabelStyle: const TextStyle(color: colorPrimario),
+        floatingLabelStyle: const TextStyle(color: pal.colorPrimario),
       );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brandTextStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: colorPrimario, fontWeight: FontWeight.w600, letterSpacing: .2,
+      color: pal.colorPrimario, fontWeight: FontWeight.w600, letterSpacing: .2,
     );
 
     return Scaffold(
-      backgroundColor: colorFondo,
+      backgroundColor: pal.fondo,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -296,7 +297,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                           Container(
                             padding: const EdgeInsets.fromLTRB(16, 64, 16, 16), // ↑ más aire alto
                             decoration: BoxDecoration(
-                              color: colorSecundario, 
+                              color: pal.colorSecundario, 
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
@@ -370,9 +371,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           }
                                         },
                                         style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: colorAcento),
+                                          side: const BorderSide(color: pal.colorAcento),
                                           shape: const StadiumBorder(),
-                                          foregroundColor: colorAcento,
+                                          foregroundColor: pal.colorAcento,
                                           padding: const EdgeInsets.symmetric(vertical: 14),
                                         ),
                                         child: Text(_tabs.index == 0 ? 'Cancelar' : 'Atrás'),
@@ -383,7 +384,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       child: ElevatedButton(
                                         onPressed: _nextOrSave,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: colorAcento,
+                                        backgroundColor: pal.colorAcento,
                                         foregroundColor: Colors.white,
                                         shape: const StadiumBorder(),
                                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -469,7 +470,7 @@ class _TabsFichas extends StatelessWidget {
             ),
             indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Colors.transparent,
-            labelColor: colorAcento,
+            labelColor: pal.colorAcento,
             unselectedLabelColor: Colors.black54,
             tabs: labels.map((t) {
               return Tab(

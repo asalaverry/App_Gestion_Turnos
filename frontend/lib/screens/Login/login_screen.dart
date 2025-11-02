@@ -5,14 +5,6 @@ import '../Registro/registro_1.dart';
 import '../RecuperarContraseña/recuperarContrasena_1.dart'; 
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
-const fondo = Color(0xFFF8FAFC);
-const colorPrimario = Color(0xFF86B6F6); 
-const colorSecundario = Color(0xFFEEF5FF); 
-const colorAcento = Color(0xFF2C6E7B);
-const colorFondo = Color(0xFFF8FAFC);
-const colorAcento2 = Color(0xFF3A8FA0);
-const kBrand = Color(0x9C176B87);
-const kFondo = Color(0xFFF8FAFC);
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
