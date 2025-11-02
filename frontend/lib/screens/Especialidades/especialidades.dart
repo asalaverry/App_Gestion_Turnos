@@ -1,26 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
-import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
-import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
 import 'package:flutter_application_1/config/api.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
+import 'package:flutter_application_1/widgets/barra_nav_inferior.dart';
+import 'package:flutter_application_1/widgets/barra_nav_superior.dart';
 import 'package:http/http.dart' as http;
+
 import '../Turnos/reservar_turno.dart';
 
 class Especialidad {
   final int id;
   final String nombre;
 
-  const Especialidad({
-    required this.id,
-    required this.nombre,
-  });
+  const Especialidad({required this.id, required this.nombre});
 
-  factory Especialidad.fromJson(Map<String, dynamic> j) => Especialidad(
-        id: j['id'] as int,
-        nombre: j['nombre'] as String,
-      );
+  factory Especialidad.fromJson(Map<String, dynamic> j) =>
+      Especialidad(id: j['id'] as int, nombre: j['nombre'] as String);
 }
 
 // -------------------- PANTALLA --------------------
@@ -39,7 +36,6 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
 
   List<Especialidad> _items = const [];
   List<Especialidad> _itemsAll = const [];
-  String? _error;
   bool _loading = false;
 
   @override
@@ -59,7 +55,6 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
   Future<void> _cargarEspecialidades() async {
     setState(() {
       _loading = true;
-      _error = null;
     });
 
     try {
@@ -74,16 +69,15 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
 
       final list = (json.decode(res.body) as List).cast<Map<String, dynamic>>();
       final todas = list
-          .map((j) => Especialidad(
-                id: j['id'] as int,
-                nombre: j['nombre'] as String,
-              ))
+          .map(
+            (j) =>
+                Especialidad(id: j['id'] as int, nombre: j['nombre'] as String),
+          )
           .toList();
 
       _itemsAll = todas;
       _aplicarFiltro();
     } catch (e) {
-      _error = e.toString();
       setState(() => _items = const []);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +91,10 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
 
   void _onSearchChanged() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () => _aplicarFiltro());
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => _aplicarFiltro(),
+    );
   }
 
   void _aplicarFiltro() {
@@ -130,16 +127,22 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
                   hintText: 'Buscar…',
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   prefixIcon: const Icon(Icons.search, color: Colors.black54),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.black.withOpacity(.15)),
+                    borderSide: BorderSide(
+                      color: Colors.black.withOpacity(.15),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.black.withOpacity(.15)),
+                    borderSide: BorderSide(
+                      color: Colors.black.withOpacity(.15),
+                    ),
                   ),
                   focusedBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -154,18 +157,19 @@ class _EspecialidadesScreenState extends State<EspecialidadesScreen> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _items.isEmpty
-                      ? const Center(
-                          child: Text('Sin resultados',
-                              style: TextStyle(color: Colors.black54)),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                          itemCount: _items.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (_, i) => _EspecialidadTile(
-                            especialidad: _items[i],
-                          ),
-                        ),
+                  ? const Center(
+                      child: Text(
+                        'Sin resultados',
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                      itemCount: _items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (_, i) =>
+                          _EspecialidadTile(especialidad: _items[i]),
+                    ),
             ),
           ],
         ),
@@ -211,12 +215,8 @@ class _EspecialidadTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          // Aquí podrías navegar a detalle de especialidad o a lista de profesionales filtrada
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Seleccionaste: ${especialidad.nombre}')),
-          );
-        },
+        // Tile solo visual: deshabilitamos la acción onTap para que no muestre nada
+        onTap: null,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -244,19 +244,8 @@ class _EspecialidadTile extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 8),
-
-              // Botón de opciones
-              Container(
-                height: 40,
-                width: 68,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.more_horiz, color: Colors.black45),
-              ),
+              // Espacio reservado (sin botón de opciones)
+              const SizedBox.shrink(),
             ],
           ),
         ),
