@@ -1,22 +1,20 @@
 # app/routers/recordatorios.py
 
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
+import os
 
 from app.database import get_db
 from app import models
-from app.routers.notificaciones import _send_push  # usamos tu mismo helper privado
-
+from app.routers.notificaciones import _send_push  # usamos tu helper privado
 
 router = APIRouter(prefix="/recordatorios", tags=["Recordatorios"])
 
 def _combinar_fecha_hora(fecha_date, hora_time) -> datetime:
     """
-    Convierte (fecha: date, horario: time) en un datetime UTC naive.
-    IMPORTANTE:
-    - Si tus horas están en horario local Argentina y tu server está en UTC,
-      tal vez quieras ajustar con zona horaria después.
+    Convierte (fecha: date, horario: time) en un datetime naive.
+    Si guardás fechas/horas en horario local, esto los combina tal cual.
     """
     return datetime(
         year=fecha_date.year,
@@ -27,33 +25,43 @@ def _combinar_fecha_hora(fecha_date, hora_time) -> datetime:
         second=hora_time.second,
     )
 
-
 @router.post("/run")
-def enviar_recordatorios_24h(db: Session = Depends(get_db)):
+def enviar_recordatorios_24h(
+    db: Session = Depends(get_db),
+    x_cron_key: str = Header(None),
+):
     """
-    Busca turnos activos que ocurren ~24 horas a partir de ahora,
-    manda notificación push al paciente y marca recordatorio_24h = True.
+    - Protegido con X-CRON-KEY.
+    - Busca turnos activos ~24h antes.
+    - Envía push y marca recordatorio_24h = True.
     """
 
+    # 1. Seguridad: validar secret
+    cron_secret_env = os.getenv("CRON_SECRET")
+    if cron_secret_env is None:
+        # Si te olvidaste de cargarlo en Render, prefiero que grite feo
+        raise HTTPException(status_code=500, detail="CRON_SECRET no configurado en el servidor")
+
+    if x_cron_key != cron_secret_env:
+        raise HTTPException(status_code=403, detail="Acceso no autorizado")
+
+    # 2. Lógica de recordatorios
     ahora = datetime.utcnow()
     objetivo = ahora + timedelta(hours=24)
 
-    # Definimos ventana de tolerancia +/- 5 minutos
+    # Ventana de tolerancia +-5 min alrededor de 'ahora+24h'
     ventana_inicio = objetivo - timedelta(minutes=5)
     ventana_fin    = objetivo + timedelta(minutes=5)
 
-    # Traemos TODOS los turnos candidatos de la base.
-    # Nota: no podemos filtrar aún por rango de datetimes directo
-    # porque fecha y horario están separados en columnas.
-    # Vamos a filtrar en Python.
+    # Buscamos turnos candidatos
     turnos = (
         db.query(models.Turno)
         .join(models.Usuario, models.Turno.id_usuario == models.Usuario.id)
         .join(models.Profesional, models.Turno.id_profesional == models.Profesional.id)
         .filter(
             models.Turno.estado == "activo",
-            models.Turno.recordatorio_24h == False,  # aún no avisado
-            models.Usuario.device_token.isnot(None), # el paciente tiene token FCM
+            models.Turno.recordatorio_24h == False,            # no avisado todavía
+            models.Usuario.device_token.isnot(None),           # tiene token FCM
         )
         .all()
     )
@@ -63,29 +71,25 @@ def enviar_recordatorios_24h(db: Session = Depends(get_db)):
     for turno in turnos:
         dt_turno = _combinar_fecha_hora(turno.fecha, turno.horario)
 
-        # ¿está dentro de la ventana objetivo?
+        # ¿cae dentro de la ventana (24h ±5min)?
         if ventana_inicio <= dt_turno <= ventana_fin:
             usuario = turno.usuario
             profesional = turno.profesional
 
             token = usuario.device_token
             if not token:
-                # por seguridad, aunque ya filtramos isnot(None)
-                continue
+                continue  # por las dudas
 
-            # armamos el mensaje
             titulo = "Recordatorio de turno"
-            # ejemplo: "Tenés turno mañana 09:30 con Dra. Pérez (Cardiología)"
             cuerpo = (
                 f"Tenés turno el {turno.fecha.strftime('%d/%m/%Y')} "
                 f"a las {turno.horario.strftime('%H:%M')} "
                 f"con {profesional.nombre}."
             )
 
-            # mandamos push via FCM
             resp = _send_push(token, titulo, cuerpo)
 
-            # marcamos que este turno ya recibió recordatorio
+            # marcamos que ya se notificó este turno
             turno.recordatorio_24h = True
 
             enviados.append({
@@ -98,7 +102,7 @@ def enviar_recordatorios_24h(db: Session = Depends(get_db)):
                 "fcm_response": resp,
             })
 
-    # guardamos los cambios (recordatorio_24h = True)
+    # persistimos el flag recordatorio_24h=True
     db.commit()
 
     return {
