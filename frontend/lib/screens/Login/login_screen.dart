@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../Home/home_screen.dart';
 import '../Registro/registro_1.dart';
-import '../RecuperarContraseña/recuperarContrasena_1.dart'; 
+import '../RecuperarContraseña/recuperarContrasena_1.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
+// 👇 importante: importá tu servicio de notificaciones
+import 'package:flutter_application_1/services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +29,65 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _login() async {
+    final email = _email.text.trim();
+    final pass = _password.text;
+
+    if (email.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Completá email y contraseña'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      // 1. Login con Firebase Auth
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: pass,
+      );
+
+      // 2. Registrar / actualizar el token FCM en tu backend
+      //    Esto hace POST /fcm/register-device con el token_fcm
+      await NotificationService.registrarTokenDespuesDeLogin();
+
+      // ⚠ IMPORTANTE:
+      // Acá ANTES llamábamos a NotificationService.instance.showLocal(...)
+      // Eso ya NO VA porque tu NotificationService NO tiene .instance ni showLocal().
+      // Lo eliminamos para que no marque error.
+
+      // 3. Navegar al Home
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      var msg = 'No se pudo iniciar sesión';
+      switch (e.code) {
+        case 'user-not-found':
+          msg = 'Usuario no encontrado';
+          break;
+        case 'wrong-password':
+          msg = 'Contraseña incorrecta';
+          break;
+        case 'invalid-email':
+          msg = 'Email inválido';
+          break;
+        case 'invalid-credential':
+          msg = 'Credenciales inválidas';
+          break;
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -45,7 +107,10 @@ class _LoginScreenState extends State<LoginScreen> {
             borderSide: BorderSide(color: pal.colorPrimario, width: 1.2),
           ),
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 12,
+          ),
         ),
       ),
       child: Scaffold(
@@ -58,7 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo
-                  Image.asset('assets/logo.png', height: 140, fit: BoxFit.contain),
+                  Image.asset(
+                    'assets/logo.png',
+                    height: 140,
+                    fit: BoxFit.contain,
+                  ),
                   const SizedBox(height: 16),
 
                   // Email
@@ -78,14 +147,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: 'Contraseña',
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.black54),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                        icon: Icon(
+                          _obscure ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.black54,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscure = !_obscure),
                       ),
                     ),
                   ),
 
-                  
+                  // ¿Olvidó su contraseña?
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -93,11 +165,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const RecuperarContrasena1(),
+                            builder: (context) =>
+                                const RecuperarContrasena1(),
                           ),
                         );
                       },
-                      style: TextButton.styleFrom(foregroundColor: Colors.black54),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.black54,
+                      ),
                       child: const Text('¿Olvidó su contraseña?'),
                     ),
                   ),
@@ -111,53 +186,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
                     ),
-                    onPressed: _loading
-                        ? null
-                        : () async {
-                            final email = _email.text.trim();
-                            final pass = _password.text;
-                            if (email.isEmpty || pass.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Completá email y contraseña'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            setState(() => _loading = true);
-                            try {
-                              await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                email: email,
-                                password: pass,
-                              );
-                              if (!mounted) return;
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => const HomeScreen()),
-                              );
-                            } on FirebaseAuthException catch (e) {
-                              var msg = 'No se pudo iniciar sesión';
-                              switch (e.code) {
-                                case 'user-not-found':
-                                  msg = 'Usuario no encontrado';
-                                  break;
-                                case 'wrong-password':
-                                  msg = 'Contraseña incorrecta';
-                                  break;
-                                case 'invalid-email':
-                                  msg = 'Email inválido';
-                                  break;
-                                case 'invalid-credential':
-                                  msg = 'Credenciales inválidas';
-                                  break;
-                              }
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(content: Text(msg)));
-                            } finally {
-                              if (mounted) setState(() => _loading = false);
-                            }
-                          },
-                    child: Text(_loading ? 'Ingresando...' : 'Iniciar sesión'),
+                    onPressed: _loading ? null : _login,
+                    child: Text(
+                      _loading ? 'Ingresando...' : 'Iniciar sesión',
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -165,13 +197,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: pal.colorAcento,
-                      side: const BorderSide(color: pal.colorAcento, width: 2),
+                      side: const BorderSide(
+                        color: pal.colorAcento,
+                        width: 2,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: const StadiumBorder(),
                     ),
                     onPressed: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
                       );
                     },
                     child: const Text('Registrarse'),

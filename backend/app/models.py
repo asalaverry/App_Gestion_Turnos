@@ -55,5 +55,8 @@ class Turno(Base):
     id_usuario = Column(Integer, ForeignKey("usuarios.id"))
     id_profesional = Column(Integer, ForeignKey("profesionales.id"))
 
+    recordatorio_24h = Column(Boolean, default=False)
+
+
     usuario = relationship("Usuario", back_populates="turnos")
     profesional = relationship("Profesional", back_populates="turnos")
