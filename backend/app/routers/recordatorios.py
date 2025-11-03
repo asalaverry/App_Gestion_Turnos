@@ -26,14 +26,14 @@ def _combinar_fecha_hora(fecha_date, hora_time) -> datetime:
     )
 
 @router.post("/run")
-def enviar_recordatorios_12h(
+def enviar_recordatorios_24h(
     db: Session = Depends(get_db),
     x_cron_key: str = Header(None),
 ):
     """
     - Protegido con X-CRON-KEY.
-    - Busca turnos activos ~12h antes.
-    - Envía push y marca recordatorio_12h = True.
+    - Busca turnos activos dentro de las próximas 24h.
+    - Envía push y marca recordatorio_24h = True.
     """
 
     # 1. Seguridad: validar secret
@@ -44,23 +44,30 @@ def enviar_recordatorios_12h(
     if x_cron_key != cron_secret_env:
         raise HTTPException(status_code=403, detail="Acceso no autorizado")
 
-    # 2. Lógica de recordatorios
+    # 2. Lógica de recordatorios - Buscar turnos en las próximas 24h
     ahora = datetime.utcnow()
-    objetivo = ahora + timedelta(hours=12)   # 🔹 CAMBIO: antes decía 24
+    
+    # Ventana amplia: desde AHORA hasta AHORA+24h
+    # Esto garantiza que cualquier turno dentro de las próximas 24h reciba recordatorio
+    ventana_inicio = ahora
+    ventana_fin = ahora + timedelta(hours=24)
 
-    # Ventana de tolerancia ±5 min
-    ventana_inicio = objetivo - timedelta(minutes=5)
-    ventana_fin = objetivo + timedelta(minutes=5)
-
-    # Buscamos turnos candidatos
+    # Buscamos turnos candidatos que cumplan TODAS estas condiciones:
+    # - Estado activo
+    # - Usuario QUIERE recordatorio (recordatorio_activado == True)
+    # - Recordatorio NO enviado aún (recordatorio_enviado == False)
+    # - Usuario tiene device_token registrado
+    # - Usuario está activo
     turnos = (
         db.query(models.Turno)
         .join(models.Usuario, models.Turno.id_usuario == models.Usuario.id)
         .join(models.Profesional, models.Turno.id_profesional == models.Profesional.id)
         .filter(
             models.Turno.estado == "activo",
-            models.Turno.recordatorio_24h == False,  # podés cambiarlo a recordatorio_12h si agregás ese campo
+            models.Turno.recordatorio_activado == True,   # Usuario activó el recordatorio
+            models.Turno.recordatorio_enviado == False,   # No se ha enviado aún
             models.Usuario.device_token.isnot(None),
+            models.Usuario.activo == True,  # Solo usuarios activos
         )
         .all()
     )
@@ -80,14 +87,15 @@ def enviar_recordatorios_12h(
 
             titulo = "Recordatorio de turno"
             cuerpo = (
-                f"Tenés turno el {turno.fecha.strftime('%d/%m/%Y')} "
+                f"Tenés turno mañana {turno.fecha.strftime('%d/%m/%Y')} "
                 f"a las {turno.horario.strftime('%H:%M')} "
                 f"con {profesional.nombre}."
             )
 
             resp = _send_push(token, titulo, cuerpo)
 
-            turno.recordatorio_24h = True  # o recordatorio_12h si lo renombrás
+            # Marcar como enviado para no enviar duplicados
+            turno.recordatorio_enviado = True
 
             enviados.append({
                 "turno_id": turno.id,

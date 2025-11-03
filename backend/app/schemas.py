@@ -107,11 +107,14 @@ class TurnoBase(BaseModel):
 
 class TurnoCreate(TurnoBase):
     id_profesional: int  # Siempre requerido (frontend asigna uno aleatorio si usuario elige "Cualquiera")
+    recordatorio_activado: Optional[bool] = False  # El usuario activa el recordatorio en el frontend
 
 
 class TurnoResponse(TurnoBase):
     id: int
     estado: Literal["activo", "pasado", "cancelado"]
+    recordatorio_activado: bool  # Si el usuario quiere recibir recordatorio
+    recordatorio_enviado: bool   # Si ya se envió el recordatorio
     usuario: Optional[UsuarioResponse] = None
     profesional: Optional[ProfesionalResponse] = None
 
