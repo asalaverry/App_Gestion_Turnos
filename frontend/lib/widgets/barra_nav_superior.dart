@@ -14,8 +14,6 @@ class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
   // Home
   final void Function(String value)? onMenuSelected;
   final List<PopupMenuEntry<String>> Function(BuildContext context)? menuBuilder;
-  final int notifCount;
-  final VoidCallback? onNotificationsPressed;
 
   // Atras
   final VoidCallback? onBack;
@@ -27,19 +25,15 @@ class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,  
     this.onMenuSelected,
     this.menuBuilder,
-    this.notifCount = 0,
-    this.onNotificationsPressed,
     this.onBack,
   }) : _mode = mode;
 
-  /// Variante Home: menú + notificaciones
+  /// Variante Home: menú hamburguesa
   factory CustomTopBar.home({
     Key? key,
     String? title,
     required void Function(String value) onMenuSelected,
     required List<PopupMenuEntry<String>> Function(BuildContext context) menuBuilder,
-    int notifCount = 0,
-    VoidCallback? onNotificationsPressed,
     PreferredSizeWidget? bottom,  
   }) {
     return CustomTopBar._(
@@ -49,8 +43,6 @@ class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
       bottom: bottom,
       onMenuSelected: onMenuSelected,
       menuBuilder: menuBuilder,
-      notifCount: notifCount,
-      onNotificationsPressed: onNotificationsPressed,
     );
   }
 
@@ -96,36 +88,6 @@ class CustomTopBar extends StatelessWidget implements PreferredSizeWidget {
               onPressed: onBack ?? () => Navigator.of(context).maybePop(),
             ),
       title: Text(title ?? ''),
-      actions: _mode == _Mode.home
-          ? [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none),
-                    onPressed: onNotificationsPressed,
-                  ),
-                  if (notifCount > 0)
-                    Positioned(
-                      right: 10,
-                      top: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: pal.colorAtencion,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          notifCount > 9 ? '9+' : '$notifCount',
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 8),
-            ]
-          : null,
       bottom: bottom, 
     );
   }
