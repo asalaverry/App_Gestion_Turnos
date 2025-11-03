@@ -24,8 +24,12 @@ def create_usuario(
     if existing:
         return existing
 
-    # 2) Evitamos duplicar por email
-    if db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first():
+    # 2) Evitamos duplicar por email (solo entre usuarios activos)
+    email_existente = db.query(models.Usuario).filter(
+        models.Usuario.email == usuario.email,
+        models.Usuario.activo == True
+    ).first()
+    if email_existente:
         raise HTTPException(status_code=400, detail="Email ya registrado en la base de datos")
     
     # 3) Creamos el usuario (guardamos firebase_uid)
@@ -49,8 +53,11 @@ def create_usuario(
 
 @router.post("/check")
 def check_usuario(usuario: schemas.UsuarioCheck, db: Session = Depends(get_db)):
-    # Buscar por documento
-    existe = db.query(models.Usuario).filter(models.Usuario.documento == usuario.documento).first()
+    # Buscar por documento (solo entre usuarios activos)
+    existe = db.query(models.Usuario).filter(
+        models.Usuario.documento == usuario.documento,
+        models.Usuario.activo == True
+    ).first()
     if existe:
         return {"exists": True}
     return {"exists": False}
@@ -94,11 +101,12 @@ def actualizar_usuario_actual(
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    # Verificar si el DNI ya está en uso por otro usuario
+    # Verificar si el DNI ya está en uso por otro usuario activo
     if datos.documento is not None and datos.documento != usuario.documento:
         dni_existente = db.query(models.Usuario).filter(
             models.Usuario.documento == datos.documento,
-            models.Usuario.id != usuario.id
+            models.Usuario.id != usuario.id,
+            models.Usuario.activo == True
         ).first()
         if dni_existente:
             raise HTTPException(status_code=400, detail="Ya existe un usuario con ese DNI")
@@ -131,13 +139,11 @@ def actualizar_cobertura_actual(
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    # Actualizar cobertura
-    if datos.id_obra_social is not None:
-        usuario.id_obra_social = datos.id_obra_social
-    if datos.plan_obra_social is not None:
-        usuario.plan_obra_social = datos.plan_obra_social
-    if datos.nro_afiliado is not None:
-        usuario.nro_afiliado = datos.nro_afiliado
+    # Actualizar cobertura (permitiendo valores None/NULL)
+    # Si id_obra_social es None, también se limpian plan y nro_afiliado
+    usuario.id_obra_social = datos.id_obra_social
+    usuario.plan_obra_social = datos.plan_obra_social
+    usuario.nro_afiliado = datos.nro_afiliado
     
     db.commit()
     db.refresh(usuario)
