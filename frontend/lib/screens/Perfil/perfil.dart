@@ -183,14 +183,38 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   }
 
   Future<void> _saveDatos() async {
-    // Separar nombre y apellido
+    // Validar que los campos no estén vacíos
     final nombreCompleto = _nombreCtrl.text.trim();
+    final dniInput = _dniCtrl.text.trim();
+    final fechaInput = _fechaNacCtrl.text.trim();
+
+    if (nombreCompleto.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El nombre no puede estar vacío')),
+      );
+      return;
+    }
+
+    if (dniInput.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El DNI no puede estar vacío')),
+      );
+      return;
+    }
+
+    if (fechaInput.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La fecha de nacimiento no puede estar vacía')),
+      );
+      return;
+    }
+
+    // Separar nombre y apellido
     final partes = nombreCompleto.split(' ');
     final nombre = partes.isNotEmpty ? partes[0] : '';
     final apellido = partes.length > 1 ? partes.sublist(1).join(' ') : '';
 
     // Convertir fecha de DD/MM/YYYY a YYYY-MM-DD
-    final fechaInput = _fechaNacCtrl.text.trim();
     String fechaISO = fechaInput;
     try {
       final partesFecha = fechaInput.split('/');
@@ -202,7 +226,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     final resultado = await UsuarioService.actualizarDatosPersonales(
       nombre: nombre,
       apellido: apellido,
-      documento: _dniCtrl.text.trim(),
+      documento: dniInput,
       fechaNacimiento: fechaISO,
     );
 
@@ -229,17 +253,31 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   }
 
   Future<void> _saveCobertura() async {
-    if (_idObraSocial == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: No se pudo obtener el ID de obra social')),
-      );
-      return;
+    final planInput = _planCtrl.text.trim();
+    final afiliadoInput = _afiliadoCtrl.text.trim();
+
+    // Si tiene obra social seleccionada, plan y número de afiliado son obligatorios
+    if (_idObraSocial != null) {
+      if (planInput.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El plan es obligatorio cuando tiene obra social')),
+        );
+        return;
+      }
+
+      if (afiliadoInput.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El número de afiliado es obligatorio cuando tiene obra social')),
+        );
+        return;
+      }
     }
 
+    // Si no tiene obra social, enviar null en todos los campos
     final exitoso = await UsuarioService.actualizarCobertura(
-      idObraSocial: _idObraSocial!,
-      planObraSocial: _planCtrl.text.trim(),
-      nroAfiliado: _afiliadoCtrl.text.trim(),
+      idObraSocial: _idObraSocial,
+      planObraSocial: _idObraSocial == null ? null : planInput,
+      nroAfiliado: _idObraSocial == null ? null : afiliadoInput,
     );
 
     if (exitoso) {
@@ -437,11 +475,11 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       ];
 
   List<Widget> _coberturaView() => [
-        _kv('Obra Social', _obraSocial),
+        _kv('Obra Social', _obraSocial.isEmpty ? 'Sin obra social' : _obraSocial),
         const SizedBox(height: 6),
-        _kv('Plan', _plan),
+        _kv('Plan', _plan.isEmpty ? '-' : _plan),
         const SizedBox(height: 6),
-        _kv('Número Afiliado', _numeroAfiliado),
+        _kv('Número Afiliado', _numeroAfiliado.isEmpty ? '-' : _numeroAfiliado),
       ];
 
   List<Widget> _coberturaEdit() => [
@@ -449,10 +487,11 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
         if (_isLoadingObras)
           const Center(child: CircularProgressIndicator())
         else
-          DropdownButtonFormField<int>(
+          DropdownButtonFormField<int?>(
             value: _idObraSocial,
             decoration: InputDecoration(
               labelText: 'Obra Social',
+              helperText: 'Seleccione "Sin obra social" si no tiene cobertura',
               isDense: true,
               focusedBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(color: pal.colorAcento, width: 1.6),
@@ -461,33 +500,55 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                 borderSide: BorderSide(color: Colors.black.withOpacity(.25)),
               ),
             ),
-            items: _obrasSociales.map((obra) {
-              return DropdownMenuItem<int>(
-                value: obra['id'] as int,
-                child: Text(obra['nombre'] as String),
-              );
-            }).toList(),
+            items: [
+              // Opción "Sin obra social"
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text('Sin obra social'),
+              ),
+              // Obras sociales disponibles
+              ..._obrasSociales.map((obra) {
+                return DropdownMenuItem<int?>(
+                  value: obra['id'] as int,
+                  child: Text(obra['nombre'] as String),
+                );
+              }).toList(),
+            ],
             onChanged: (nuevoId) {
               setState(() {
                 _idObraSocial = nuevoId;
-                final obraSeleccionada = _obrasSociales.firstWhere(
-                  (o) => o['id'] == nuevoId,
-                  orElse: () => {},
-                );
-                if (obraSeleccionada.isNotEmpty) {
-                  _obraCtrl.text = obraSeleccionada['nombre'] ?? '';
-                  _obraSocial = obraSeleccionada['nombre'] ?? '';
+                if (nuevoId == null) {
+                  _obraCtrl.text = 'Sin obra social';
+                  _obraSocial = '';
+                  // Limpiar plan y número de afiliado si no hay obra social
+                  _planCtrl.clear();
+                  _afiliadoCtrl.clear();
+                } else {
+                  final obraSeleccionada = _obrasSociales.firstWhere(
+                    (o) => o['id'] == nuevoId,
+                    orElse: () => {},
+                  );
+                  if (obraSeleccionada.isNotEmpty) {
+                    _obraCtrl.text = obraSeleccionada['nombre'] ?? '';
+                    _obraSocial = obraSeleccionada['nombre'] ?? '';
+                  }
                 }
               });
             },
           ),
         const SizedBox(height: 6),
-        _underlineField(label: 'Plan', controller: _planCtrl, textInputAction: TextInputAction.next),
+        _underlineField(
+          label: _idObraSocial != null ? 'Plan *' : 'Plan',
+          controller: _planCtrl,
+          textInputAction: TextInputAction.next,
+          readOnly: _idObraSocial == null,
+        ),
         const SizedBox(height: 6),
         _underlineField(
-          label: 'Número Afiliado',
+          label: _idObraSocial != null ? 'Número Afiliado *' : 'Número Afiliado',
           controller: _afiliadoCtrl,
           keyboardType: TextInputType.number,
+          readOnly: _idObraSocial == null,
         ),
         const SizedBox(height: 12),
         _editActions(onCancel: _cancelEditCobertura, onSave: _saveCobertura),

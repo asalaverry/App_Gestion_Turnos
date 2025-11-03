@@ -83,10 +83,11 @@ class UsuarioService {
   }
 
   /// Actualiza la cobertura médica del usuario
+  /// Todos los campos pueden ser null si el usuario no tiene obra social
   static Future<bool> actualizarCobertura({
-    required int idObraSocial,
-    required String planObraSocial,
-    required String nroAfiliado,
+    int? idObraSocial,
+    String? planObraSocial,
+    String? nroAfiliado,
   }) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
