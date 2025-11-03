@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'recuperarContrasena_3.dart';
+import '../Login/login_screen.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
 
@@ -14,10 +15,10 @@ class Recuperarcontrasena2 extends StatefulWidget {
 class _Recuperarcontrasena2State extends State<Recuperarcontrasena2> {
   bool _reenviando = false;
 
-  void _continuar() {
+  void _aceptar() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const RecuperarContrasena3()),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 
@@ -106,7 +107,7 @@ class _Recuperarcontrasena2State extends State<Recuperarcontrasena2> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _continuar,
+                        onPressed: _aceptar,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: pal.colorAcento,
                           foregroundColor: Colors.white,
@@ -116,7 +117,7 @@ class _Recuperarcontrasena2State extends State<Recuperarcontrasena2> {
                           ),
                         ),
                         child: const Text(
-                          "Continuar",
+                          "Aceptar",
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
