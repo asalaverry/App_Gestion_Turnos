@@ -28,7 +28,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final PageController _pageCtrl = PageController();
   int _currentPage = 0;
-  int _notifCount = 3; // demo
 
   // Próximos turnos (cargados desde el backend)
   List<Appointment> _nextAppointments = [];
@@ -118,8 +117,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       backgroundColor: pal.fondo,
       appBar: CustomTopBar.home(
         title: '',
-        notifCount: _notifCount,
-        onNotificationsPressed: () => setState(() => _notifCount = 0),
         //Menu superior
         onMenuSelected: (value) async {
           switch (value) {

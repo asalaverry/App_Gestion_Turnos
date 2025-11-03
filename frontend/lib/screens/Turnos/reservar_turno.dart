@@ -313,7 +313,8 @@ class _ReservarTurnoWizardState extends State<ReservarTurnoWizard> {
       final turnoData = {
         'fecha': fechaStr,
         'horario': _horario,
-        'id_profesional': _idProfesional, 
+        'id_profesional': _idProfesional,
+        'recordatorio_activado': _recordatorio24h, // Enviar estado del switch
       };
 
       // Enviar al backend

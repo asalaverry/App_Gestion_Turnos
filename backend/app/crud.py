@@ -50,7 +50,9 @@ def crear_turno(db: Session, turno: schemas.TurnoCreate, id_usuario: int):
         horario=turno.horario,
         id_usuario=id_usuario,
         id_profesional=turno.id_profesional,
-        estado="activo"
+        estado="activo",
+        recordatorio_activado=turno.recordatorio_activado if turno.recordatorio_activado is not None else False,
+        recordatorio_enviado=False  # Siempre inicia en False
     )
     db.add(nuevo_turno)
     db.commit()

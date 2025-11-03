@@ -68,7 +68,7 @@ class _MisTurnosScreenState extends State<MisTurnosScreen> {
               // Opción: Historial de turnos
               _OptionTile(
                 title: 'Historial de Turnos',
-                subtitle: 'Consultar turnos anteriores',
+                subtitle: 'Consultar turnos proxímos y pasados',
                 icon: Icons.history_edu,
                 onTap: () {
                   Navigator.of(context).push(

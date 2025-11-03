@@ -13,7 +13,7 @@ router = APIRouter(prefix="/fcm", tags=["Notificaciones"])
 
 FIREBASE_SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
-SERVICE_JSON_PATH = os.getenv("FIREBASE_CREDENTIALS", "app/secret/serviceAccountKey.json")
+SERVICE_JSON_PATH = os.getenv("FIREBASE_CREDENTIALS")
 
 # -----------------------------
 # Helpers internos

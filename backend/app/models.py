@@ -55,7 +55,8 @@ class Turno(Base):
     id_usuario = Column(Integer, ForeignKey("usuarios.id"))
     id_profesional = Column(Integer, ForeignKey("profesionales.id"))
 
-    recordatorio_24h = Column(Boolean, default=False)
+    recordatorio_activado = Column(Boolean, default=False)  # El usuario quiere recibir recordatorio
+    recordatorio_enviado = Column(Boolean, default=False)   # Ya se envió el recordatorio
 
 
     usuario = relationship("Usuario", back_populates="turnos")
