@@ -20,32 +20,32 @@ Incluye autenticación, manejo de horarios disponibles, filtrado por especialida
 ## Arquitectura
 App_Gestion_Turnos/
 │
-|──.github
-    |──workflows
-        |──recordatorios.yml
+├── .github/
+│   └── workflows/
+│       └── recordatorios.yml
+│
 ├── backend/
-│ ├── app/
-│ │ ├── main.py
-│ │ ├── database.py
-│ │ ├── models.py
-│ │ ├── schemas.py
-│ │ ├── crud.py
-│ │ ├── firebase.py
-│ │ ├── deps.py
-│ │ └── routers/
-│ │ ├── usuarios.py
-│ │ ├── turnos.py
-│ │ ├── profesionales.py
-│ │ ├── notificaciones.py
-│ │ └── recordatorios.py
-│ ├── requirements.txt
-│ └── .env
+│   └── app/
+│       ├── main.py
+│       ├── database.py
+│       ├── crud.py
+│       ├── firebase.py
+│       ├── deps.py
+│       ├── models.py
+│       ├── schemas.py
+│       ├── notificaciones.py
+│       ├── turnos.py
+│       └── profesionales.py
+│   ├── recordatorios.py
+│   ├── requirements.txt
+│   └── .env
 │
 └── frontend/
-├── lib/
-├── android/
-├── ios/
-└── pubspec.yaml
+    ├── lib/
+    ├── android/
+    ├── ios/
+    └── pubspec.yaml
+
 
 ## Autenticación
 - Login / Registro mediante **Firebase Authentication**
