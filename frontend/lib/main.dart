@@ -4,7 +4,7 @@ import 'package:flutter_application_1/navigation.dart';
 
 import 'firebase_options.dart';
 import 'screens/Login/login_screen.dart';
-import 'services/notification_service.dart'; // importa tu servicio
+import 'services/notification_service.dart'; // importar servicio
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
