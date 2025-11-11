@@ -277,7 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Logo (asegurate de tenerlo en assets y pubspec.yaml)
+                    // Logo 
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Image.asset(
@@ -293,9 +293,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          // Card (fondo EEF5FF)
+                          // Card 
                           Container(
-                            padding: const EdgeInsets.fromLTRB(16, 64, 16, 16), // ↑ más aire alto
+                            padding: const EdgeInsets.fromLTRB(16, 64, 16, 16), 
                             decoration: BoxDecoration(
                               color: pal.colorSecundario, 
                               borderRadius: BorderRadius.circular(20),
@@ -451,13 +451,6 @@ class _TabsFichas extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(32),
-            /*boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],*/
             border: Border.all(color: Colors.black.withOpacity(0.06)),
           ),
           child: TabBar(
@@ -687,7 +680,7 @@ class UsuarioRegistro {
   String apellido;
   String documento;
   String fechaNacimiento;
-  int? obraSocial; // Ahora es int (ID de la obra social)
+  int? obraSocial; 
   String? planObraSocial;
   String? numeroAfiliado;
 
@@ -708,7 +701,7 @@ class UsuarioRegistro {
     "fecha_nacimiento": fechaNacimiento,
     "id_obra_social": obraSocial,
     "plan_obra_social": planObraSocial,
-    "nro_afiliado": numeroAfiliado, // Corregido: nro_afiliado con guión bajo
+    "nro_afiliado": numeroAfiliado, 
   };
 }
 

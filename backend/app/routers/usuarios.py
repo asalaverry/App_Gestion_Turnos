@@ -19,7 +19,7 @@ def create_usuario(
     uid = firebase_user.get("uid")
     email_from_token = firebase_user.get("email")
 
-    # 1) Si ya existe perfil vinculado a ese firebase_uid -> devolvemos (idempotente). Buena practica.
+    # 1) Si ya existe perfil vinculado a ese firebase_uid -> devolvemos (idempotente). 
     existing = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
     if existing:
         return existing

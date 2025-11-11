@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'recuperarContrasena_2.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
-const colorSecundario = Color(0xFFEEF5FF);
-const colorAcento = Color(0xFF2C6E7B);
-const colorPrimario = Color(0xFF86B6F6);
-const colorFondo = Color(0xFFF8FAFC);
+
 
 class RecuperarContrasena1 extends StatefulWidget {
   const RecuperarContrasena1({super.key});
@@ -104,7 +102,7 @@ class _RecuperarContrasena1State extends State<RecuperarContrasena1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: colorFondo,
+      backgroundColor: pal.fondo,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -117,7 +115,7 @@ class _RecuperarContrasena1State extends State<RecuperarContrasena1> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: colorSecundario,
+                    color: pal.colorSecundario,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Form(
@@ -140,7 +138,7 @@ class _RecuperarContrasena1State extends State<RecuperarContrasena1> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          cursorColor: colorAcento,
+                          cursorColor: pal.colorAcento,
                           validator: _validarEmail,
                           decoration: const InputDecoration(
                             labelText: 'Email',
@@ -153,9 +151,9 @@ class _RecuperarContrasena1State extends State<RecuperarContrasena1> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(color: colorPrimario, width: 1.2),
+                              borderSide: BorderSide(color: pal.colorPrimario, width: 1.2),
                             ),
-                            floatingLabelStyle: TextStyle(color: colorPrimario),
+                            floatingLabelStyle: TextStyle(color: pal.colorPrimario),
                           ),
                         ),
                       ],
@@ -169,8 +167,8 @@ class _RecuperarContrasena1State extends State<RecuperarContrasena1> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: colorAcento, width: 2),
-                          foregroundColor: colorAcento,
+                          side: const BorderSide(color: pal.colorAcento, width: 2),
+                          foregroundColor: pal.colorAcento,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: const StadiumBorder(),
                         ),
@@ -182,7 +180,7 @@ class _RecuperarContrasena1State extends State<RecuperarContrasena1> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _enviarEmailRecuperacion,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: colorAcento,
+                          backgroundColor: pal.colorAcento,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: const StadiumBorder(),

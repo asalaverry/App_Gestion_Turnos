@@ -6,7 +6,7 @@ import '../Registro/registro_1.dart';
 import '../RecuperarContraseña/recuperarContrasena_1.dart';
 import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
-// 👇 importante: importá tu servicio de notificaciones
+// importante: importar servicio de notificaciones
 import 'package:flutter_application_1/services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -51,11 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: pass,
       );
 
-      // 2. Registrar / actualizar el token FCM en tu backend
+      // 2. Registrar / actualizar el token FCM en el backend
       //    Esto hace POST /fcm/register-device con el token_fcm
       await NotificationService.registrarTokenDespuesDeLogin();
 
-      // ⚠ IMPORTANTE:
+      // IMPORTANTE:
       // Acá ANTES llamábamos a NotificationService.instance.showLocal(...)
       // Eso ya NO VA porque tu NotificationService NO tiene .instance ni showLocal().
       // Lo eliminamos para que no marque error.

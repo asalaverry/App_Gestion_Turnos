@@ -5,7 +5,7 @@ from app import models
 from sqlalchemy.orm import Session
 import requests
 import os
-import json  # <- lo estás importando pero no lo usás en este archivo. Podés borrarlo si querés.
+import json  
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request as GoogleAuthRequest
 
@@ -53,7 +53,7 @@ def _send_push(token_fcm: str, title: str, body: str):
     print("FCM status:", r.status_code, r.text)
 
     if r.status_code not in (200, 204):
-        # devolvemos 500 en vez de sólo print, así el cliente (vos) ve que falló
+        # devolvemos 500 en vez de sólo print, así el cliente ve que falló
         raise HTTPException(
             status_code=500,
             detail=f"Error enviando push a FCM: {r.status_code} {r.text}"

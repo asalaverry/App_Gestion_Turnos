@@ -7,7 +7,7 @@ import os
 
 from app.database import get_db
 from app import models
-from app.routers.notificaciones import _send_push  # usamos tu helper privado
+from app.routers.notificaciones import _send_push  # usamos helper privado
 
 router = APIRouter(prefix="/recordatorios", tags=["Recordatorios"])
 

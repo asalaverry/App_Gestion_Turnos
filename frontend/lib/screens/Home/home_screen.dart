@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Subscribe to route changes so we can refresh when returning to this screen
+    // Suscribirse a los cambios de ruta para poder actualizar cuando se regrese a esta pantalla
     final modal = ModalRoute.of(context);
     if (modal != null) {
       routeObserver.subscribe(this, modal);
@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void dispose() {
-    // Unsubscribe from route observer
+    // Cancelar la suscripción del observador de rutas.
     routeObserver.unsubscribe(this);
     _pageCtrl.dispose();
     super.dispose();
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // Called when the top route has been popped and this route shows up again.
+    // Se llama cuando la ruta superior ha sido retirada (pop) y esta ruta vuelve a mostrarse.
     _loadNextAppointments();
   }
 
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  // dispose removed since we now override it above
+  // Se eliminó dispose porque ahora lo sobreescribimos más arriba.
 
   @override
   Widget build(BuildContext context) {
@@ -514,4 +514,4 @@ class _QuickButton extends StatelessWidget {
   }
 }
 
-// Badge widget removed (not referenced). If you want notifications badge, re-add it here.
+

@@ -4,14 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'registro_1.dart'; // Para importar UsuarioRegistro
 import '../../config/api.dart';
+import 'package:flutter_application_1/config/paleta_colores.dart' as pal;
 
-// Colores compartidos (los mismos de registro_1.dart)
-const fondo = Color(0xFFF8FAFC);
-const colorPrimario = Color(0xFF86B6F6);
-const colorSecundario = Color(0xFFEEF5FF);
-const colorAcento = Color(0xFF2C6E7B);
-const colorFondo = Color(0xFFF8FAFC);
-const colorAcento2 = Color(0xFF3A8FA0);
+
 
 class RegisterStep2Screen extends StatefulWidget {
   final UsuarioRegistro usuarioRegistro; // ← Ahora recibe el objeto completo
@@ -130,9 +125,9 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
         labelText: label,
         border: _tfBorder(),
         enabledBorder: _tfBorder(),
-        focusedBorder: _tfBorder(colorPrimario),
+        focusedBorder: _tfBorder(pal.colorPrimario),
         suffixIcon: suffix,
-        floatingLabelStyle: const TextStyle(color: colorPrimario),
+        floatingLabelStyle: const TextStyle(color: pal.colorPrimario),
       );
 
   /// FLUJO COMPLETO: Validar → Firebase → Base de Datos → Éxito
@@ -213,7 +208,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorSecundario,
+        color: pal.colorSecundario,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -280,9 +275,9 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
                   child: OutlinedButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: colorAcento),
+                      side: const BorderSide(color: pal.colorAcento),
                       shape: const StadiumBorder(),
-                      foregroundColor: colorAcento,
+                      foregroundColor: pal.colorAcento,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text("Anterior"),
@@ -293,7 +288,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _confirmar,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorAcento,
+                      backgroundColor: pal.colorAcento,
                       foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -330,7 +325,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.check_circle, color: colorAcento, size: 48),
+          const Icon(Icons.check_circle, color: pal.colorAcento, size: 48),
           const SizedBox(height: 16),
           Text(
             "¡Bienvenido, $nombre!",
@@ -351,7 +346,7 @@ class _RegisterStep2ScreenState extends State<RegisterStep2Screen> {
               Navigator.popUntil(context, (route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: colorAcento,
+              backgroundColor: pal.colorAcento,
               foregroundColor: Colors.white,
               shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),

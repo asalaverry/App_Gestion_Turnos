@@ -450,7 +450,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
         _underlineField(
           label: 'Email',
           controller: _emailCtrl,
-          readOnly: true,                 // 🔒 SOLO LECTURA
+          readOnly: true,                 // SOLO LECTURA
           helperText: 'No es posible editar el correo electrónico',
         ),
         const SizedBox(height: 6),
@@ -594,7 +594,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     );
   }
 
-  // Campo subrayado estilo Material por defecto (UnderlineInputBorder)
+  // Campo subrayado estilo Material por defecto
   Widget _underlineField({
     required String label,
     required TextEditingController controller,
